@@ -12,5 +12,4 @@ public class CurrencyResponse {
   private String fullName;
   private String sign;
 
-
 }
