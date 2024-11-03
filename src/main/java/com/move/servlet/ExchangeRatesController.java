@@ -22,8 +22,10 @@ public class ExchangeRatesController extends HttpServlet {
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     ExchangeRatesService exchangeRatesService = new ExchangeRatesService();
     ExchangeRatesDao exchangeRatesDao = new ExchangeRatesDao();
+    resp.setContentType("application/json");
+    resp.setCharacterEncoding("UTF-8");
     try {
-      List<ExchangeRatesResponse> exchangeRates = exchangeRatesService.getAllExchangeRates(exchangeRatesDao.getExchangeRatesFromDB());
+      List<ExchangeRatesResponse> exchangeRates = exchangeRatesService.getAllExchangeRates(exchangeRatesDao.findExchangeRatesFromDB());
       objectMapper.writerWithDefaultPrettyPrinter().writeValue(resp.getWriter(), exchangeRates);
     } catch (SQLException e) {
       throw new RuntimeException(e);
