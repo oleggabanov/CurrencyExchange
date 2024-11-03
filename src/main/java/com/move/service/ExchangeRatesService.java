@@ -1,6 +1,8 @@
 package com.move.service;
 
-import com.move.model.ExchangeRatesResponse;
+import com.move.model.dao.CurrenciesDao;
+import com.move.model.response.CurrencyResponse;
+import com.move.model.response.ExchangeRateResponse;
 import com.move.model.dao.ExchangeRatesDao;
 
 import java.sql.ResultSet;
@@ -11,24 +13,39 @@ import java.util.List;
 public class ExchangeRatesService {
 
   private ExchangeRatesDao exchangeRatesDao;
+  private CurrenciesDao currenciesDao;
 
   public ExchangeRatesService() {
     this.exchangeRatesDao = new ExchangeRatesDao();
+    this.currenciesDao = new CurrenciesDao();
   }
 
-  public List<ExchangeRatesResponse> getAllExchangeRates() throws SQLException {
+  public List<ExchangeRateResponse> getAllExchangeRates() throws SQLException {
     ResultSet resultSet = exchangeRatesDao.findExchangeRatesFromDB();
-    List<ExchangeRatesResponse> exchangeRates = new ArrayList<>();
+    List<ExchangeRateResponse> exchangeRates = new ArrayList<>();
     while (resultSet.next()) {
-      ExchangeRatesResponse exchangeRatesResponse = ExchangeRatesResponse.builder()
+      int baseCurrencyId = resultSet.getInt("base_currency_id");
+      int targetCurrencyId = resultSet.getInt("target_currency_id");
+      CurrencyResponse baseCurrency = getCurrency(currenciesDao.findCurrencyByIdFromDB(baseCurrencyId));
+      CurrencyResponse targetCurrency = getCurrency(currenciesDao.findCurrencyByIdFromDB(targetCurrencyId));
+      ExchangeRateResponse exchangeRateResponse = ExchangeRateResponse.builder()
               .id(resultSet.getInt("id"))
-              .baseCurrencyId(resultSet.getString("base_currency_id"))
-              .targetCurrencyId(resultSet.getString("target_currency_id"))
+              .baseCurrency(baseCurrency)
+              .targetCurrency(targetCurrency)
               .rate(resultSet.getBigDecimal("rate"))
               .build();
 
-      exchangeRates.add(exchangeRatesResponse);
+      exchangeRates.add(exchangeRateResponse);
     }
     return exchangeRates;
+  }
+
+  public CurrencyResponse getCurrency(ResultSet resultSet) throws SQLException {
+    return CurrencyResponse.builder()
+            .id(resultSet.getInt("id"))
+            .code(resultSet.getString("code"))
+            .fullName(resultSet.getString("full_name"))
+            .sign(resultSet.getString("sign"))
+            .build();
   }
 }
