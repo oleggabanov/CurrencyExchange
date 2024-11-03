@@ -20,8 +20,6 @@ public class CurrencyController extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     String pathInfo = request.getRequestURI();
     String currencyCode = pathInfo.split("/")[2];
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
     try {
       objectMapper.writerWithDefaultPrettyPrinter().writeValue(response.getWriter(), currenciesService.getCurrencyByCode(currencyCode));
     } catch (IOException e) {

@@ -20,8 +20,6 @@ public class CurrenciesController extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
     objectMapper.writerWithDefaultPrettyPrinter()
             .writeValue(response.getWriter(), currenciesService.getCurrencies());
   }
@@ -30,8 +28,6 @@ public class CurrenciesController extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     Map<String, String[]> requestParams = request.getParameterMap();
-    response.setContentType("application/json");
-    response.setCharacterEncoding("UTF-8");
     try {
       objectMapper.writerWithDefaultPrettyPrinter()
               .writeValue(response.getWriter(), currenciesService.addCurrency(requestParams));

@@ -18,8 +18,6 @@ public class ExchangeRatesController extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    resp.setContentType("application/json");
-    resp.setCharacterEncoding("UTF-8");
     try {
       objectMapper.writerWithDefaultPrettyPrinter()
               .writeValue(resp.getWriter(), exchangeRatesService.getAllExchangeRates());
