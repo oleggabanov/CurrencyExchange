@@ -1,4 +1,4 @@
-package com.move.servlet;
+package com.move.servlet.currency;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;

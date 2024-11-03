@@ -1,8 +1,8 @@
 package com.move.service;
 
 import com.move.dto.CurrencyDto;
-import com.move.model.CurrencyResponse;
-import com.move.model.dao.CurrencyDao;
+import com.move.model.response.CurrencyResponse;
+import com.move.model.dao.CurrenciesDao;
 import lombok.SneakyThrows;
 
 import java.sql.ResultSet;
@@ -12,15 +12,15 @@ import java.util.Map;
 
 public class CurrenciesService {
 
-  private CurrencyDao currencyDao;
+  private CurrenciesDao currenciesDao;
 
   public CurrenciesService() {
-    this.currencyDao = new CurrencyDao();
+    this.currenciesDao = new CurrenciesDao();
   }
 
   @SneakyThrows
   public List<CurrencyResponse> getCurrencies() {
-    ResultSet resultSet = currencyDao.findCurrenciesFromDB();
+    ResultSet resultSet = currenciesDao.findCurrenciesFromDB();
     List<CurrencyResponse> currencies = new ArrayList<>();
     while (resultSet.next()) {
       CurrencyResponse currencyResponse = CurrencyResponse.builder()
@@ -37,7 +37,7 @@ public class CurrenciesService {
 
   @SneakyThrows
   public CurrencyResponse getCurrencyByCode(String currencyCode) {
-    ResultSet resultSet = currencyDao.findCurrencyByCodeFromDB(currencyCode);
+    ResultSet resultSet = currenciesDao.findCurrencyByCodeFromDB(currencyCode);
 
     return CurrencyResponse.builder()
             .id(resultSet.getInt("id"))
@@ -63,7 +63,7 @@ public class CurrenciesService {
               .sign(sign)
               .build();
 
-       resultSet = currencyDao.addCurrencyToDB(currencyDto);
+       resultSet = currenciesDao.addCurrencyToDB(currencyDto);
        currencyResponse = CurrencyResponse.builder()
                .id(resultSet.getInt("id"))
                .code(resultSet.getString("code"))
@@ -73,6 +73,4 @@ public class CurrenciesService {
     }
     return currencyResponse;
   }
-
-
 }

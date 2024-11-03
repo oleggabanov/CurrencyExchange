@@ -1,4 +1,4 @@
-package com.move.model;
+package com.move.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

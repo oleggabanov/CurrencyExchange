@@ -1,4 +1,4 @@
-package com.move.servlet;
+package com.move.servlet.exchangeRate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.service.ExchangeRatesService;
