@@ -48,4 +48,14 @@ public class ExchangeRatesService {
             .sign(resultSet.getString("sign"))
             .build();
   }
+
+  public ExchangeRateResponse getExchangeRate(String firstCurrencyCode, String secondCurrencyCode) {
+    ExchangeRateResponse exchangeRateResponse = null;
+    
+
+
+
+    return exchangeRateResponse;
+
+  }
 }
