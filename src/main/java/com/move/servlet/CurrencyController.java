@@ -13,13 +13,13 @@ import java.io.IOException;
 public class CurrencyController extends HttpServlet {
 
   private ObjectMapper objectMapper = new ObjectMapper();
+  private CurrenciesService currenciesService = new CurrenciesService();
 
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     String pathInfo = request.getRequestURI();
     String currencyCode = pathInfo.split("/")[2];
-    CurrenciesService currenciesService = new CurrenciesService();
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
     try {
@@ -28,8 +28,6 @@ public class CurrencyController extends HttpServlet {
       throw new RuntimeException(e);
     }
   }
-
-
 
 
 }
