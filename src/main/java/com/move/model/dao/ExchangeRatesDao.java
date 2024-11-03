@@ -9,17 +9,20 @@ import java.sql.Statement;
 
 public class ExchangeRatesDao {
 
-  public ResultSet getExchangeRatesFromDB() {
+  private Connection connection;
+
+  public ExchangeRatesDao() {
+    connection = ConnectionDatabase.getConnection();
+  }
+
+  public ResultSet findExchangeRatesFromDB() {
     String sqlQuery = "select * from exchange_rates;";
-    Connection connection;
     Statement statement;
     ResultSet resultSet;
     try {
-      Class.forName("org.sqlite.JDBC");
-      connection = ConnectionDatabase.getConnection();
       statement = connection.createStatement();
       resultSet = statement.executeQuery(sqlQuery);
-    } catch (ClassNotFoundException | SQLException e) {
+    } catch (SQLException e) {
       throw new RuntimeException(e);
     }
     return resultSet;
