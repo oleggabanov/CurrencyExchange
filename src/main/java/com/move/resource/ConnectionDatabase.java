@@ -20,6 +20,7 @@ public class ConnectionDatabase {
       }
       Class.forName("org.sqlite.JDBC");
       connection = DriverManager.getConnection("jdbc:sqlite:" + path);
+      connection.setAutoCommit(false);
     } catch (ClassNotFoundException | SQLException | URISyntaxException e) {
       throw new RuntimeException(e);
     }
