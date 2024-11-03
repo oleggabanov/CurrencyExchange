@@ -1,9 +1,0 @@
-GET http://localhost:8080/currencies
-
-###
-
-GET http://localhost:8080/currency/KZT
-
-###
-
-POST http://localhost:8080/currencies?code=KZT&full_name=Tenge&sign=₸
