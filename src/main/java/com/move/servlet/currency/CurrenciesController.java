@@ -20,8 +20,13 @@ public class CurrenciesController extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    objectMapper.writerWithDefaultPrettyPrinter()
-            .writeValue(response.getWriter(), currenciesService.getCurrencies());
+    try{
+      objectMapper.writerWithDefaultPrettyPrinter()
+              .writeValue(response.getWriter(), currenciesService.getCurrencies());
+    } catch (Exception e) {
+      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
   }
 
 
