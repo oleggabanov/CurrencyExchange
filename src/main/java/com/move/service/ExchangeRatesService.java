@@ -49,13 +49,28 @@ public class ExchangeRatesService {
             .build();
   }
 
-  public ExchangeRateResponse getExchangeRate(String firstCurrencyCode, String secondCurrencyCode) {
-    ExchangeRateResponse exchangeRateResponse = null;
-    
+  public ExchangeRateResponse getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
+    ResultSet baseResultSet = currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode);
+    ResultSet targetResultSet = currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode);
+    ExchangeRateResponse exchangeRateResponse;
 
+    try {
+      CurrencyResponse baseCurrency = getCurrency(baseResultSet);
+      CurrencyResponse targetCurrency = getCurrency(targetResultSet);
+      int baseCurrencyId = baseCurrency.getId();
+      int targetCurrencyId = targetCurrency.getId();
+      ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrencyCodes(baseCurrencyId, targetCurrencyId);
 
+      exchangeRateResponse = ExchangeRateResponse.builder()
+              .id(resultSet.getInt("id"))
+              .baseCurrency(baseCurrency)
+              .targetCurrency(targetCurrency)
+              .rate(resultSet.getBigDecimal("rate"))
+              .build();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
 
     return exchangeRateResponse;
-
   }
 }
