@@ -25,7 +25,7 @@ public class ExchangeRatesDao {
     return resultSet;
   }
 
-  public ResultSet findExchangeRateByCurrencyCodes(int baseCurrencyId, int targetCurrencyId) {
+  public ResultSet findExchangeRateByCurrencyId(int baseCurrencyId, int targetCurrencyId) {
     String sqlQuery = "select * from exchange_rates where base_currency_id = (?) and target_currency_id = (?);";
     ResultSet resultSet;
     try {
@@ -39,4 +39,6 @@ public class ExchangeRatesDao {
 
     return resultSet;
   }
+
+
 }
