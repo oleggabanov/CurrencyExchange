@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.move.service.serviceUtils.ServiceUtils.getCurrencyFromResultSet;
+
 public class ExchangeRatesService {
 
   private ExchangeRatesDao exchangeRatesDao;
@@ -43,14 +45,7 @@ public class ExchangeRatesService {
     return exchangeRates;
   }
 
-  public CurrencyResponse getCurrencyFromResultSet(ResultSet resultSet) throws SQLException {
-    return CurrencyResponse.builder()
-            .id(resultSet.getInt("id"))
-            .code(resultSet.getString("code"))
-            .fullName(resultSet.getString("full_name"))
-            .sign(resultSet.getString("sign"))
-            .build();
-  }
+
 
   @SneakyThrows
   public ExchangeRateResponse getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
