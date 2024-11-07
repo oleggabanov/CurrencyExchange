@@ -57,10 +57,10 @@ public class ExchangeRatesService {
     ExchangeRateResponse exchangeRateResponse;
     CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
     CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
-    ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrencyId(baseCurrency.getId(), targetCurrency.getId());
+    ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(baseCurrency.getId(), targetCurrency.getId());
     BigDecimal rate = resultSet.getBigDecimal("rate");
     if (resultSet.getBigDecimal("rate") == null) {
-      ResultSet resultSet2 = exchangeRatesDao.findExchangeRateByCurrencyId(targetCurrency.getId(), baseCurrency.getId());
+      ResultSet resultSet2 = exchangeRatesDao.findExchangeRateByCurrenciesId(targetCurrency.getId(), baseCurrency.getId());
       if (resultSet2.getBigDecimal("rate") != null) {
         rate = new BigDecimal(1.0).divide(resultSet2.getBigDecimal("rate"), 10, BigDecimal.ROUND_HALF_UP);
       }
@@ -91,6 +91,29 @@ public class ExchangeRatesService {
             .targetCurrency(targetCurrency)
             .rate(resultSet.getBigDecimal("rate"))
             .build();
+    return exchangeRateResponse;
+  }
+
+  @SneakyThrows
+  public ExchangeRateResponse updateExchangeRate(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
+    CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
+    CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
+
+    ExchangeRateDto exchangeRateDto = ExchangeRateDto.builder()
+            .baseCurrencyId(baseCurrency.getId())
+            .targetCurrencyId(targetCurrency.getId())
+            .rate(rate)
+            .build();
+
+    ResultSet resultSet = exchangeRatesDao.updateExchangeRateInDB(exchangeRateDto);
+
+    ExchangeRateResponse exchangeRateResponse = ExchangeRateResponse.builder()
+            .id(resultSet.getInt("id"))
+            .baseCurrency(baseCurrency)
+            .targetCurrency(targetCurrency)
+            .rate(resultSet.getBigDecimal("rate"))
+            .build();
+
     return exchangeRateResponse;
   }
 }
