@@ -1,6 +1,7 @@
 package com.move.servlet.exchangeRate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.model.response.ExchangeRateResponse;
 import com.move.service.ExchangeRatesService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 
 @WebServlet("/exchangeRates")
@@ -25,4 +27,16 @@ public class ExchangeRatesController extends HttpServlet {
       throw new RuntimeException(e);
     }
   }
+
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    String baseCurrencyCode = req.getParameter("baseCurrencyCode");
+    String targetCurrencyCode = req.getParameter("targetCurrencyCode");
+    BigDecimal rate = new BigDecimal(req.getParameter("rate"));
+    ExchangeRateResponse exchangeRateResponse = exchangeRatesService.addExchangeRate(baseCurrencyCode, targetCurrencyCode, rate);
+    objectMapper.writerWithDefaultPrettyPrinter()
+            .writeValue(resp.getWriter(), exchangeRateResponse);
+  }
+
+
 }
