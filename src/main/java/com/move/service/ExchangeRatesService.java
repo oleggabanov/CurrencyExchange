@@ -4,7 +4,9 @@ import com.move.model.dao.CurrenciesDao;
 import com.move.model.response.CurrencyResponse;
 import com.move.model.response.ExchangeRateResponse;
 import com.move.model.dao.ExchangeRatesDao;
+import lombok.SneakyThrows;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -49,28 +51,25 @@ public class ExchangeRatesService {
             .build();
   }
 
+  @SneakyThrows
   public ExchangeRateResponse getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
-    ResultSet baseResultSet = currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode);
-    ResultSet targetResultSet = currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode);
     ExchangeRateResponse exchangeRateResponse;
-
-    try {
-      CurrencyResponse baseCurrency = getCurrency(baseResultSet);
-      CurrencyResponse targetCurrency = getCurrency(targetResultSet);
-      int baseCurrencyId = baseCurrency.getId();
-      int targetCurrencyId = targetCurrency.getId();
-      ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrencyCodes(baseCurrencyId, targetCurrencyId);
-
+    CurrencyResponse baseCurrency = getCurrency(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
+    CurrencyResponse targetCurrency = getCurrency(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
+    ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrencyId(baseCurrency.getId(), targetCurrency.getId());
+    BigDecimal rate = resultSet.getBigDecimal("rate");
+    if (resultSet.getBigDecimal("rate") == null) {
+      ResultSet resultSet2 = exchangeRatesDao.findExchangeRateByCurrencyId(targetCurrency.getId(), baseCurrency.getId());
+      if (resultSet2.getBigDecimal("rate") != null) {
+        rate = new BigDecimal(1.0).divide(resultSet2.getBigDecimal("rate"),10,BigDecimal.ROUND_HALF_UP);
+      }
+    }
       exchangeRateResponse = ExchangeRateResponse.builder()
               .id(resultSet.getInt("id"))
               .baseCurrency(baseCurrency)
               .targetCurrency(targetCurrency)
-              .rate(resultSet.getBigDecimal("rate"))
+              .rate(rate)
               .build();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-
     return exchangeRateResponse;
   }
 }
