@@ -3,7 +3,6 @@ package com.move.model.dao;
 import com.move.dto.ExchangeRateDto;
 import com.move.resource.ConnectionDatabase;
 
-import java.math.BigDecimal;
 import java.sql.*;
 
 public class ExchangeRatesDao {
@@ -27,7 +26,7 @@ public class ExchangeRatesDao {
     return resultSet;
   }
 
-  public ResultSet findExchangeRateByCurrencyId(int baseCurrencyId, int targetCurrencyId) {
+  public ResultSet findExchangeRateByCurrenciesId(int baseCurrencyId, int targetCurrencyId) {
     String sqlQuery = "select * from exchange_rates where base_currency_id = (?) and target_currency_id = (?);";
     ResultSet resultSet;
     try {
@@ -55,12 +54,29 @@ public class ExchangeRatesDao {
       preparedStatement.setBigDecimal(3, exchangeRateDto.rate());
       int isQueryExecuted = preparedStatement.executeUpdate();
       if (isQueryExecuted != 0) {
-        resultSet = findExchangeRateByCurrencyId(baseCurrencyId, targetCurrencyId);
+        resultSet = findExchangeRateByCurrenciesId(baseCurrencyId, targetCurrencyId);
       }
       connection.commit();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+    return resultSet;
+  }
+
+  public ResultSet updateExchangeRateInDB(ExchangeRateDto exchangeRateDto) throws SQLException {
+    ResultSet resultSet = null;
+    String sqlQuery = "update exchange_rates set rate = (?) where base_currency_id = (?) and target_currency_id = (?);";
+    int baseCurrencyId = exchangeRateDto.baseCurrencyId();
+    int targetCurrencyId = exchangeRateDto.targetCurrencyId();
+    PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+    preparedStatement.setBigDecimal(1, exchangeRateDto.rate());
+    preparedStatement.setInt(2, baseCurrencyId);
+    preparedStatement.setInt(3, targetCurrencyId);
+    int isQueryExecuted = preparedStatement.executeUpdate();
+    if (isQueryExecuted != 0) {
+      resultSet = findExchangeRateByCurrenciesId(baseCurrencyId, targetCurrencyId);
+    }
+    connection.commit();
     return resultSet;
   }
 }
