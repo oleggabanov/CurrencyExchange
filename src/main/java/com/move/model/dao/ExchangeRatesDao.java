@@ -1,7 +1,9 @@
 package com.move.model.dao;
 
+import com.move.dto.ExchangeRateDto;
 import com.move.resource.ConnectionDatabase;
 
+import java.math.BigDecimal;
 import java.sql.*;
 
 public class ExchangeRatesDao {
@@ -41,4 +43,24 @@ public class ExchangeRatesDao {
   }
 
 
+  public ResultSet addExchangeRateToDB(ExchangeRateDto exchangeRateDto) {
+    ResultSet resultSet = null;
+    String sqlQuery = "insert into exchange_rates(base_currency_id, target_currency_id, rate) values (?, ?, ?);";
+    int baseCurrencyId = exchangeRateDto.baseCurrencyId();
+    int targetCurrencyId = exchangeRateDto.targetCurrencyId();
+    try {
+      PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+      preparedStatement.setInt(1, baseCurrencyId);
+      preparedStatement.setInt(2, targetCurrencyId);
+      preparedStatement.setBigDecimal(3, exchangeRateDto.rate());
+      int isQueryExecuted = preparedStatement.executeUpdate();
+      if (isQueryExecuted != 0) {
+        resultSet = findExchangeRateByCurrencyId(baseCurrencyId, targetCurrencyId);
+      }
+      connection.commit();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    return resultSet;
+  }
 }
