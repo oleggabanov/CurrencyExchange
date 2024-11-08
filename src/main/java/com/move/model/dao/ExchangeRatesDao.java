@@ -79,4 +79,44 @@ public class ExchangeRatesDao {
     connection.commit();
     return resultSet;
   }
+
+  public boolean deleteExchangeRateByCurrencyCodesFromDB(int baseCurrencyId, int targetCurrencyId) {
+    String getIdSqlQuery = "SELECT id FROM exchange_rates WHERE base_currency_id = (?) AND target_currency_id = (?);";
+    String deleteSqlQuery = "DELETE FROM exchange_rates WHERE id = (?);";
+    String updateIdsSqlQuery = "UPDATE exchange_rates SET id = id - 1 WHERE id > (?);";
+    String resetAutoincrementSqlQuery = "UPDATE sqlite_sequence SET seq = (SELECT MAX(id) FROM exchange_rates) WHERE name = 'exchange_rates';";
+
+    boolean isExchangeRateDeleted = false;
+    int deletedId = -1;
+
+    try {
+      PreparedStatement getIdStatement = connection.prepareStatement(getIdSqlQuery);
+      getIdStatement.setInt(1, baseCurrencyId);
+      getIdStatement.setInt(2, targetCurrencyId);
+
+      ResultSet resultSet = getIdStatement.executeQuery();
+      if (resultSet.next()) {
+        deletedId = resultSet.getInt("id");
+      }
+      if (deletedId != -1) {
+        PreparedStatement deleteStatement = connection.prepareStatement(deleteSqlQuery);
+        deleteStatement.setInt(1, deletedId);
+        int isQueryExecuted = deleteStatement.executeUpdate();
+        if (isQueryExecuted != 0) {
+          PreparedStatement updateStatement = connection.prepareStatement(updateIdsSqlQuery);
+          updateStatement.setInt(1, deletedId);
+          updateStatement.executeUpdate();
+          Statement resetStatement = connection.createStatement();
+          resetStatement.executeUpdate(resetAutoincrementSqlQuery);
+          isExchangeRateDeleted = true;
+        }
+      }
+      connection.commit();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    return isExchangeRateDeleted;
+  }
+
+
 }
