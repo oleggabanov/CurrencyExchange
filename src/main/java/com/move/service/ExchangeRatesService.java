@@ -5,6 +5,7 @@ import com.move.model.dao.CurrenciesDao;
 import com.move.model.response.CurrencyResponse;
 import com.move.model.response.ExchangeRateResponse;
 import com.move.model.dao.ExchangeRatesDao;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 
 import java.math.BigDecimal;
@@ -46,7 +47,6 @@ public class ExchangeRatesService {
   }
 
 
-
   @SneakyThrows
   public ExchangeRateResponse getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
     ExchangeRateResponse exchangeRateResponse;
@@ -57,7 +57,7 @@ public class ExchangeRatesService {
     if (resultSet.getBigDecimal("rate") == null) {
       ResultSet resultSet2 = exchangeRatesDao.findExchangeRateByCurrenciesId(targetCurrency.getId(), baseCurrency.getId());
       if (resultSet2.getBigDecimal("rate") != null) {
-        rate = new BigDecimal(1.0).divide(resultSet2.getBigDecimal("rate"), 10, BigDecimal.ROUND_HALF_UP);
+        rate = new BigDecimal(1.0).divide(resultSet2.getBigDecimal("rate"), 7, BigDecimal.ROUND_HALF_UP);
       }
     }
     exchangeRateResponse = ExchangeRateResponse.builder()
@@ -110,5 +110,13 @@ public class ExchangeRatesService {
             .build();
 
     return exchangeRateResponse;
+  }
+
+  @SneakyThrows
+  public int deleteExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
+    CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
+    CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
+    boolean isExchangeRateDeleted = exchangeRatesDao.deleteExchangeRateByCurrencyCodesFromDB(baseCurrency.getId(), targetCurrency.getId());
+    return isExchangeRateDeleted ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
   }
 }
