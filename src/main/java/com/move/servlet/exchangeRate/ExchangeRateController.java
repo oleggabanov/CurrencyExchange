@@ -48,4 +48,15 @@ public class ExchangeRateController extends HttpServlet {
     objectMapper.writerWithDefaultPrettyPrinter().writeValue(response.getWriter(),exchangeRateResponse);
   }
 
+  @Override
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String requestURI = request.getRequestURI();
+    String exchangeRateCodes = requestURI.split("/")[2];
+
+    String firstCode = exchangeRateCodes.substring(0, 3);
+    String secondCode = exchangeRateCodes.substring(3);
+
+    objectMapper.writerWithDefaultPrettyPrinter()
+            .writeValue(response.getWriter(), exchangeRatesService.deleteExchangeRate(firstCode,secondCode));
+  }
 }
