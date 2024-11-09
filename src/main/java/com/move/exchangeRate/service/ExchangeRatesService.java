@@ -1,10 +1,10 @@
-package com.move.service;
+package com.move.exchangeRate.service;
 
-import com.move.dto.ExchangeRateDto;
-import com.move.model.dao.CurrenciesDao;
-import com.move.model.response.CurrencyResponse;
-import com.move.model.response.ExchangeRateResponse;
-import com.move.model.dao.ExchangeRatesDao;
+import com.move.exchangeRate.dto.ExchangeRateDto;
+import com.move.currency.dao.CurrenciesDao;
+import com.move.currency.response.CurrencyResponse;
+import com.move.exchangeRate.response.ExchangeRateResponse;
+import com.move.exchangeRate.dao.ExchangeRatesDao;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 
@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.move.service.serviceUtils.ServiceUtils.getCurrencyFromResultSet;
+import static com.move.exchangeRate.service.ServiceUtils.getCurrencyFromResultSet;
 
 public class ExchangeRatesService {
 

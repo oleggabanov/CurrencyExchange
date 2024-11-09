@@ -1,7 +1,8 @@
-package com.move.service;
+package com.move.currencyExchange.service;
 
-import com.move.model.response.CurrencyExchangeResponse;
-import com.move.model.response.ExchangeRateResponse;
+import com.move.currencyExchange.response.CurrencyExchangeResponse;
+import com.move.exchangeRate.response.ExchangeRateResponse;
+import com.move.exchangeRate.service.ExchangeRatesService;
 import lombok.SneakyThrows;
 
 import java.math.BigDecimal;
@@ -27,7 +28,6 @@ public class CurrencyExchangeService {
             .amount(amount)
             .convertedAmount(convertedAmount)
             .build();
-
 
     return currencyExchangeResponse;
   }

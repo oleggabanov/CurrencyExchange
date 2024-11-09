@@ -1,8 +1,8 @@
-package com.move.servlet.exchangeRate;
+package com.move.exchangeRate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.move.model.response.ExchangeRateResponse;
-import com.move.service.ExchangeRatesService;
+import com.move.exchangeRate.response.ExchangeRateResponse;
+import com.move.exchangeRate.service.ExchangeRatesService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

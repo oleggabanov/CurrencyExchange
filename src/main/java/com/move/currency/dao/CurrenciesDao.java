@@ -1,6 +1,6 @@
-package com.move.model.dao;
+package com.move.currency.dao;
 
-import com.move.dto.CurrencyDto;
+import com.move.currency.dto.CurrencyDto;
 import com.move.resource.ConnectionDatabase;
 
 import java.sql.*;

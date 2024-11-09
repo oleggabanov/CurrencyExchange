@@ -1,6 +1,6 @@
-package com.move.service.serviceUtils;
+package com.move.exchangeRate.service;
 
-import com.move.model.response.CurrencyResponse;
+import com.move.currency.response.CurrencyResponse;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

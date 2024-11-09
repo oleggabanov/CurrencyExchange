@@ -1,4 +1,4 @@
-package com.move.model.response;
+package com.move.currency.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

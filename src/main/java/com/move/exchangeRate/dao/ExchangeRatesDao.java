@@ -1,6 +1,6 @@
-package com.move.model.dao;
+package com.move.exchangeRate.dao;
 
-import com.move.dto.ExchangeRateDto;
+import com.move.exchangeRate.dto.ExchangeRateDto;
 import com.move.resource.ConnectionDatabase;
 
 import java.sql.*;

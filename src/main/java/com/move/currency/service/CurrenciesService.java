@@ -1,8 +1,8 @@
-package com.move.service;
+package com.move.currency.service;
 
-import com.move.dto.CurrencyDto;
-import com.move.model.response.CurrencyResponse;
-import com.move.model.dao.CurrenciesDao;
+import com.move.currency.dto.CurrencyDto;
+import com.move.currency.response.CurrencyResponse;
+import com.move.currency.dao.CurrenciesDao;
 import lombok.SneakyThrows;
 
 import java.sql.ResultSet;
@@ -57,19 +57,19 @@ public class CurrenciesService {
     if (code == null || fullName == null || sign == null) {
       throw new Exception();
     } else {
-     CurrencyDto currencyDto = CurrencyDto.builder()
+      CurrencyDto currencyDto = CurrencyDto.builder()
               .code(code)
               .fullName(fullName)
               .sign(sign)
               .build();
 
-       resultSet = currenciesDao.addCurrencyToDB(currencyDto);
-       currencyResponse = CurrencyResponse.builder()
-               .id(resultSet.getInt("id"))
-               .code(resultSet.getString("code"))
-               .fullName(resultSet.getString("full_name"))
-               .sign(resultSet.getString("sign"))
-               .build();
+      resultSet = currenciesDao.addCurrencyToDB(currencyDto);
+      currencyResponse = CurrencyResponse.builder()
+              .id(resultSet.getInt("id"))
+              .code(resultSet.getString("code"))
+              .fullName(resultSet.getString("full_name"))
+              .sign(resultSet.getString("sign"))
+              .build();
     }
     return currencyResponse;
   }

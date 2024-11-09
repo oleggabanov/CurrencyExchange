@@ -1,5 +1,6 @@
-package com.move.model.response;
+package com.move.exchangeRate.response;
 
+import com.move.currency.response.CurrencyResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
