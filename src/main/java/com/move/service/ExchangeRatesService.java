@@ -155,7 +155,8 @@ public class ExchangeRatesService {
   public int deleteExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
     CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
     CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
-    boolean isExchangeRateDeleted = exchangeRatesDao.deleteExchangeRateByCurrencyCodesFromDB(baseCurrency.getId(), targetCurrency.getId());
+    ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(baseCurrency.getId(), targetCurrency.getId());
+    boolean isExchangeRateDeleted = exchangeRatesDao.deleteExchangeRateByCurrencyCodesFromDB(resultSet.getInt("id"));
     return isExchangeRateDeleted ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
   }
 }
