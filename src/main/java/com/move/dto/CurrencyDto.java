@@ -1,4 +1,4 @@
-package com.move.currency.dto;
+package com.move.dto;
 
 
 import lombok.Builder;

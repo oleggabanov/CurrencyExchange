@@ -1,10 +1,10 @@
-package com.move.exchangeRate.service;
+package com.move.service;
 
-import com.move.exchangeRate.dto.ExchangeRateDto;
-import com.move.currency.dao.CurrenciesDao;
-import com.move.currency.response.CurrencyResponse;
-import com.move.exchangeRate.response.ExchangeRateResponse;
-import com.move.exchangeRate.dao.ExchangeRatesDao;
+import com.move.dto.ExchangeRateDto;
+import com.move.dao.CurrenciesDao;
+import com.move.model.CurrencyResponse;
+import com.move.model.ExchangeRateResponse;
+import com.move.dao.ExchangeRatesDao;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 
@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.move.exchangeRate.service.ServiceUtils.getCurrencyFromResultSet;
+import static com.move.service.ServiceUtils.getCurrencyFromResultSet;
 
 public class ExchangeRatesService {
 
@@ -43,6 +43,7 @@ public class ExchangeRatesService {
 
       exchangeRates.add(exchangeRateResponse);
     }
+
     return exchangeRates;
   }
 
@@ -51,14 +52,15 @@ public class ExchangeRatesService {
   public ExchangeRateResponse getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
     CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
     CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
-    CurrencyResponse dollarCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB("USD"));
+
     ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(baseCurrency.getId(), targetCurrency.getId());
     BigDecimal rate = resultSet.getBigDecimal("rate");
+    //STRAIGHT EXCHANGE RATE
     if (rate != null) {
       int id = resultSet.getInt("id");
       return getExchangeRateResponse(id, baseCurrency, targetCurrency, rate);
     }
-
+    //REVERSE EXCHANGE RATE
     resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(targetCurrency.getId(), baseCurrency.getId());
     rate = resultSet.getBigDecimal("rate");
     if (rate != null) {
@@ -72,30 +74,10 @@ public class ExchangeRatesService {
       int id = savedExchangeRate.getInt("id");
       return getExchangeRateResponse(id, baseCurrency, targetCurrency, rate);
     }
+    //CROSS EXCHANGE RATE
 
-    ResultSet baseResultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(baseCurrency.getId(), dollarCurrency.getId());
-    ResultSet targetResultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(dollarCurrency.getId(), targetCurrency.getId());
 
-    BigDecimal firstRate = baseResultSet.getBigDecimal("rate");
-    BigDecimal secondRate = targetResultSet.getBigDecimal("rate");
-
-    if (firstRate == null) {
-      baseResultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(dollarCurrency.getId(), baseCurrency.getId());
-      firstRate = BigDecimal.valueOf(1).divide(baseResultSet.getBigDecimal("rate"), 7, BigDecimal.ROUND_HALF_UP);
-    }
-    if (secondRate == null) {
-      targetResultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(targetCurrency.getId(), dollarCurrency.getId());
-      secondRate = BigDecimal.valueOf(1).divide(targetResultSet.getBigDecimal("rate"), 7, BigDecimal.ROUND_HALF_UP);
-    }
-
-    rate = firstRate.multiply(secondRate);
-    ExchangeRateDto exchangeRateDto = ExchangeRateDto.builder()
-            .baseCurrencyId(baseCurrency.getId())
-            .targetCurrencyId(targetCurrency.getId())
-            .rate(rate)
-            .build();
-    ResultSet savedExchangeRate = exchangeRatesDao.addExchangeRateToDB(exchangeRateDto);
-    return getExchangeRateResponse(savedExchangeRate.getInt("id"), baseCurrency, targetCurrency, rate);
+    return null;
   }
 
   private ExchangeRateResponse getExchangeRateResponse(int id, CurrencyResponse baseCurrency, CurrencyResponse targetCurrency, BigDecimal rate) throws SQLException {
@@ -107,6 +89,7 @@ public class ExchangeRatesService {
             .build();
     return exchangeRateResponse;
   }
+
 
   @SneakyThrows
   public ExchangeRateResponse addExchangeRate(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {

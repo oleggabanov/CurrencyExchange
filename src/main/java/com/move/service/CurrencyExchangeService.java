@@ -1,8 +1,7 @@
-package com.move.currencyExchange.service;
+package com.move.service;
 
-import com.move.currencyExchange.response.CurrencyExchangeResponse;
-import com.move.exchangeRate.response.ExchangeRateResponse;
-import com.move.exchangeRate.service.ExchangeRatesService;
+import com.move.model.CurrencyExchangeResponse;
+import com.move.model.ExchangeRateResponse;
 import lombok.SneakyThrows;
 
 import java.math.BigDecimal;

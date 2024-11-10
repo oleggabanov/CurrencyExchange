@@ -1,8 +1,8 @@
-package com.move.currencyExchange.controller;
+package com.move.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.move.currencyExchange.response.CurrencyExchangeResponse;
-import com.move.currencyExchange.service.CurrencyExchangeService;
+import com.move.model.CurrencyExchangeResponse;
+import com.move.service.CurrencyExchangeService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

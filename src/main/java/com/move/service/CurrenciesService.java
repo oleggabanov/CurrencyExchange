@@ -1,8 +1,8 @@
-package com.move.currency.service;
+package com.move.service;
 
-import com.move.currency.dto.CurrencyDto;
-import com.move.currency.response.CurrencyResponse;
-import com.move.currency.dao.CurrenciesDao;
+import com.move.dto.CurrencyDto;
+import com.move.model.CurrencyResponse;
+import com.move.dao.CurrenciesDao;
 import lombok.SneakyThrows;
 
 import java.sql.ResultSet;
