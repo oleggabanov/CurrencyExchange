@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @Builder
-public class ExchangeRateResponse {
+public class ExchangeRate {
 
   private int id;
   private CurrencyResponse baseCurrency;

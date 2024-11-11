@@ -1,4 +1,4 @@
-package com.move.service;
+package com.move.service.currency;
 
 import com.move.dto.CurrencyDto;
 import com.move.model.CurrencyResponse;

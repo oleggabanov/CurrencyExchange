@@ -1,8 +1,8 @@
 package com.move.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.move.model.CurrencyExchangeResponse;
-import com.move.service.CurrencyExchangeService;
+import com.move.model.CurrencyExchange;
+import com.move.service.exchange.CurrencyExchangeService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,10 +23,10 @@ public class CurrencyExchangeController extends HttpServlet {
     String targetCurrencyCode = req.getParameter("to");
     BigDecimal amount = new BigDecimal(req.getParameter("amount"));
 
-    CurrencyExchangeResponse currencyExchangeResponse = currencyExchangeService.convertCurrency(baseCurrencyCode, targetCurrencyCode, amount);
+    CurrencyExchange currencyExchange = currencyExchangeService.convertCurrency(baseCurrencyCode, targetCurrencyCode, amount);
 
     objectMapper.writerWithDefaultPrettyPrinter()
-            .writeValue(resp.getWriter(), currencyExchangeResponse);
+            .writeValue(resp.getWriter(), currencyExchange);
 
 
   }

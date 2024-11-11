@@ -1,8 +1,8 @@
 package com.move.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.move.model.ExchangeRateResponse;
-import com.move.service.ExchangeRatesService;
+import com.move.model.ExchangeRate;
+import com.move.service.exchange.ExchangeRatesService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,9 +33,9 @@ public class ExchangeRatesController extends HttpServlet {
     String baseCurrencyCode = req.getParameter("baseCurrencyCode");
     String targetCurrencyCode = req.getParameter("targetCurrencyCode");
     BigDecimal rate = new BigDecimal(req.getParameter("rate"));
-    ExchangeRateResponse exchangeRateResponse = exchangeRatesService.addExchangeRate(baseCurrencyCode, targetCurrencyCode, rate);
+    ExchangeRate exchangeRate = exchangeRatesService.addExchangeRate(baseCurrencyCode, targetCurrencyCode, rate);
     objectMapper.writerWithDefaultPrettyPrinter()
-            .writeValue(resp.getWriter(), exchangeRateResponse);
+            .writeValue(resp.getWriter(), exchangeRate);
   }
 
 

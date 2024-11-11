@@ -1,8 +1,8 @@
 package com.move.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.move.model.ExchangeRateResponse;
-import com.move.service.ExchangeRatesService;
+import com.move.model.ExchangeRate;
+import com.move.service.exchange.ExchangeRatesService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,10 +25,10 @@ public class ExchangeRateController extends HttpServlet {
     String firstCode = exchangeRateCodes.substring(0, 3);
     String secondCode = exchangeRateCodes.substring(3);
 
-    ExchangeRateResponse exchangeRateResponse = exchangeRatesService.getExchangeRate(firstCode, secondCode);
+    ExchangeRate exchangeRate = exchangeRatesService.getExchangeRateByCurrencyCodes(firstCode, secondCode);
     try {
       objectMapper.writerWithDefaultPrettyPrinter()
-              .writeValue(response.getWriter(), exchangeRateResponse);
+              .writeValue(response.getWriter(), exchangeRate);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -43,9 +43,9 @@ public class ExchangeRateController extends HttpServlet {
     String secondCode = exchangeRateCodes.substring(3);
     BigDecimal rate = new BigDecimal(request.getParameter("rate"));
 
-    ExchangeRateResponse exchangeRateResponse = exchangeRatesService.updateExchangeRate(firstCode,secondCode,rate);
+    ExchangeRate exchangeRate = exchangeRatesService.updateExchangeRate(firstCode,secondCode,rate);
 
-    objectMapper.writerWithDefaultPrettyPrinter().writeValue(response.getWriter(),exchangeRateResponse);
+    objectMapper.writerWithDefaultPrettyPrinter().writeValue(response.getWriter(), exchangeRate);
   }
 
   @Override
