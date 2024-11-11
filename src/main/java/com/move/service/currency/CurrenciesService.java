@@ -1,14 +1,13 @@
 package com.move.service.currency;
 
-import com.move.dto.CurrencyDto;
-import com.move.model.CurrencyResponse;
 import com.move.dao.CurrenciesDao;
+import com.move.dto.CurrencyDto;
+import com.move.model.Currency;
 import lombok.SneakyThrows;
 
-import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class CurrenciesService {
 
@@ -19,38 +18,19 @@ public class CurrenciesService {
   }
 
   @SneakyThrows
-  public List<CurrencyResponse> getCurrencies() {
-    ResultSet resultSet = currenciesDao.findCurrenciesFromDB();
-    List<CurrencyResponse> currencies = new ArrayList<>();
-    while (resultSet.next()) {
-      CurrencyResponse currencyResponse = CurrencyResponse.builder()
-              .id(resultSet.getInt("id"))
-              .code(resultSet.getString("code"))
-              .fullName(resultSet.getString("full_name"))
-              .sign(resultSet.getString("sign"))
-              .build();
-
-      currencies.add(currencyResponse);
-    }
-    return currencies;
+  public List<Currency> getCurrencies() {
+    return currenciesDao.findAll();
   }
 
   @SneakyThrows
-  public CurrencyResponse getCurrencyByCode(String currencyCode) {
-    ResultSet resultSet = currenciesDao.findCurrencyByCodeFromDB(currencyCode);
-
-    return CurrencyResponse.builder()
-            .id(resultSet.getInt("id"))
-            .code(resultSet.getString("code"))
-            .fullName(resultSet.getString("full_name"))
-            .sign(resultSet.getString("sign"))
-            .build();
+  public Currency getCurrencyByCode(String currencyCode) {
+    Optional<Currency> findCurrencyByCode = currenciesDao.findCurrencyByCode(currencyCode);
+    return findCurrencyByCode.orElseThrow(() -> new RuntimeException("No such currency"));
   }
 
   @SneakyThrows
-  public CurrencyResponse addCurrency(Map<String, String[]> requestParams) {
-    ResultSet resultSet;
-    CurrencyResponse currencyResponse = null;
+  public Currency addCurrency(Map<String, String[]> requestParams) {
+    Currency currency;
     String code = requestParams.get("code")[0];
     String fullName = requestParams.get("full_name")[0];
     String sign = requestParams.get("sign")[0];
@@ -63,14 +43,9 @@ public class CurrenciesService {
               .sign(sign)
               .build();
 
-      resultSet = currenciesDao.addCurrencyToDB(currencyDto);
-      currencyResponse = CurrencyResponse.builder()
-              .id(resultSet.getInt("id"))
-              .code(resultSet.getString("code"))
-              .fullName(resultSet.getString("full_name"))
-              .sign(resultSet.getString("sign"))
-              .build();
+      Optional<Currency> findCurrencyByCode = currenciesDao.addCurrencyToDB(currencyDto);
+      currency = findCurrencyByCode.orElseThrow(() -> new RuntimeException("No such currency"));
     }
-    return currencyResponse;
+    return currency;
   }
 }
