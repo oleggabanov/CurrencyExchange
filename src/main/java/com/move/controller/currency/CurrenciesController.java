@@ -2,6 +2,7 @@ package com.move.controller.currency;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.dto.ErrorResponse;
 import com.move.service.currency.CurrenciesService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,15 +21,15 @@ public class CurrenciesController extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    try{
+    try {
       objectMapper.writerWithDefaultPrettyPrinter()
               .writeValue(response.getWriter(), currenciesService.getCurrencies());
     } catch (Exception e) {
-      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      ErrorResponse errorResponse = new ErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server Error");
+      objectMapper.writerWithDefaultPrettyPrinter()
+              .writeValue(response.getWriter(), errorResponse);
     }
-
   }
-
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
