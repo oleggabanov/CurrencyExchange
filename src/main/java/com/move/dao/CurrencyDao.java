@@ -1,9 +1,11 @@
 package com.move.dao;
 
+import com.move.model.Currency;
+
 import java.util.Optional;
 
-public interface CurrencyDao<T, ID> extends CrudDao<T, ID> {
+public interface CurrencyDao extends CrudDao<Currency, Integer> {
 
-  Optional<T> findByCode(String code);
+  Optional<Currency> findByCode(String code);
 
 }
