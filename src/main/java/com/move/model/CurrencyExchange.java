@@ -14,8 +14,8 @@ import java.math.BigDecimal;
 @Builder
 public class CurrencyExchange {
 
-  CurrencyResponse baseCurrency;
-  CurrencyResponse targetCurrency;
+  Currency baseCurrency;
+  Currency targetCurrency;
   BigDecimal rate;
   BigDecimal amount;
   BigDecimal convertedAmount;
