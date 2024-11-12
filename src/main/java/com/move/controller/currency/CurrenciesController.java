@@ -2,6 +2,7 @@ package com.move.controller.currency;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.dto.CurrencyDto;
 import com.move.dto.ErrorResponse;
 import com.move.service.currency.CurrenciesService;
 import jakarta.servlet.annotation.WebServlet;
@@ -10,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Map;
 
 @WebServlet("/currencies")
 public class CurrenciesController extends HttpServlet {
@@ -25,7 +25,7 @@ public class CurrenciesController extends HttpServlet {
       objectMapper.writerWithDefaultPrettyPrinter()
               .writeValue(response.getWriter(), currenciesService.getCurrencies());
     } catch (Exception e) {
-      ErrorResponse errorResponse = new ErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server Error");
+      ErrorResponse errorResponse = new ErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server Error", e.getMessage());
       objectMapper.writerWithDefaultPrettyPrinter()
               .writeValue(response.getWriter(), errorResponse);
     }
@@ -33,10 +33,15 @@ public class CurrenciesController extends HttpServlet {
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-    Map<String, String[]> requestParams = request.getParameterMap();
+    CurrencyDto currencyDto = CurrencyDto.builder()
+            .code(request.getParameter("code"))
+            .fullName(request.getParameter("fullName"))
+            .sign(request.getParameter("sign"))
+            .build();
+
     try {
       objectMapper.writerWithDefaultPrettyPrinter()
-              .writeValue(response.getWriter(), currenciesService.addCurrency(requestParams));
+              .writeValue(response.getWriter(), currenciesService.addCurrency(currencyDto));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
