@@ -1,20 +1,19 @@
 package com.move.context;
 
-import com.move.dao.CurrencyDaoJDBC;
-import com.move.dao.CurrencyDao;
-import jakarta.servlet.ServletContext;
+import com.move.resource.ConnectionDatabase;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
+
+import java.sql.Connection;
 
 @WebListener
 public class ApplicationContext implements ServletContextListener {
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    ServletContext servletContext = sce.getServletContext();
-    CurrencyDao currencyDao = new CurrencyDaoJDBC();
-    servletContext.setAttribute("currencyDao", currencyDao);
+    Connection connection = ConnectionDatabase.getConnection();
+    AppContext.getInstance().initialize(connection);
   }
 
 }
