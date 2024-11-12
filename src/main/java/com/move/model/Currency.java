@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CurrencyResponse {
+public class Currency {
 
   private int id;
   private String code;
