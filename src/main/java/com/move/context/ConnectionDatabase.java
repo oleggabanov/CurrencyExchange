@@ -1,4 +1,4 @@
-package com.move.resource;
+package com.move.context;
 
 import java.io.File;
 import java.net.URISyntaxException;
