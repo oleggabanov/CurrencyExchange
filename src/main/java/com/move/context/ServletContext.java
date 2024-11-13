@@ -1,6 +1,5 @@
 package com.move.context;
 
-import com.move.resource.ConnectionDatabase;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -8,7 +7,7 @@ import jakarta.servlet.annotation.WebListener;
 import java.sql.Connection;
 
 @WebListener
-public class ApplicationContext implements ServletContextListener {
+public class ServletContext implements ServletContextListener {
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
