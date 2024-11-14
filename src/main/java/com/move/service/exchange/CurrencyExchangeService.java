@@ -1,5 +1,6 @@
 package com.move.service.exchange;
 
+import com.move.dto.ExchangeRateDto;
 import com.move.model.CurrencyExchange;
 import com.move.model.ExchangeRate;
 import lombok.SneakyThrows;
@@ -16,7 +17,12 @@ public class CurrencyExchangeService {
 
   @SneakyThrows
   public CurrencyExchange convertCurrency(String baseCurrencyCode, String targetCurrencyCode, BigDecimal amount) {
-    ExchangeRate exchangeRate = exchangeRatesService.getExchangeRateByCurrencyCodes(baseCurrencyCode, targetCurrencyCode);
+    ExchangeRate exchangeRate = exchangeRatesService.getExchangeRateByCurrencyCodes(
+            ExchangeRateDto.builder()
+                    .baseCurrencyCode(baseCurrencyCode)
+                    .targetCurrencyCode(targetCurrencyCode)
+                    .build()
+    );
     BigDecimal rate = exchangeRate.getRate();
     BigDecimal convertedAmount = amount.multiply(rate);
 

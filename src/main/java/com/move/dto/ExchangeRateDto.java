@@ -7,5 +7,5 @@ import java.math.BigDecimal;
 
 
 @Builder
-public record ExchangeRateDto(int baseCurrencyId, int targetCurrencyId, BigDecimal rate) {
+public record ExchangeRateDto(String baseCurrencyCode,String targetCurrencyCode, BigDecimal rate) {
 }

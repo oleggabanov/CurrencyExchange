@@ -3,6 +3,7 @@ package com.move.service.exchange;
 import com.move.context.AppContext;
 import com.move.dao.CurrencyDao;
 import com.move.dao.ExchangeRateDao;
+import com.move.dto.ExchangeRateDto;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.exception.EntityNotFoundException;
 import com.move.model.Currency;
@@ -27,9 +28,11 @@ public class ExchangeRatesService {
   }
 
 
-  public ExchangeRate getExchangeRateByCurrencyCodes(String baseCurrencyCode, String targetCurrencyCode) {
-    Currency baseCurrency = currencyDao.findByCode(baseCurrencyCode).orElseThrow();
-    Currency targetCurrency = currencyDao.findByCode(targetCurrencyCode).orElseThrow();
+  public ExchangeRate getExchangeRateByCurrencyCodes(ExchangeRateDto exchangeRateDto) {
+    Currency baseCurrency = currencyDao.findByCode(exchangeRateDto.baseCurrencyCode())
+            .orElseThrow();
+    Currency targetCurrency = currencyDao.findByCode(exchangeRateDto.targetCurrencyCode())
+            .orElseThrow();
     ExchangeRate exchangeRate;
 
     exchangeRate = getStraightAndReverseExchangeRate(baseCurrency, targetCurrency);
@@ -103,15 +106,23 @@ public class ExchangeRatesService {
       throw new EntityNotFoundException("Обменный курс для пары не найден");
     }
 
-    exchangeRate1 = addExchangeRate(baseCurrency.getCode(), targetCurrency.getCode(), rate);
+    exchangeRate1 = addExchangeRate(
+            ExchangeRateDto.builder()
+                    .baseCurrencyCode(baseCurrency.getCode())
+                    .targetCurrencyCode(targetCurrency.getCode())
+                    .rate(rate)
+                    .build()
+    );
 
     return exchangeRate1;
   }
 
 
-  public ExchangeRate addExchangeRate(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
-    Currency baseCurrency = currencyDao.findByCode(baseCurrencyCode).orElseThrow(() -> new EntityNotFoundException("Обменный курс не найден"));
-    Currency targetCurrency = currencyDao.findByCode(targetCurrencyCode).orElseThrow(() -> new EntityNotFoundException("Обменный курс не найден"));
+  public ExchangeRate addExchangeRate(ExchangeRateDto exchangeRateDto) {
+    Currency baseCurrency = currencyDao.findByCode(exchangeRateDto.baseCurrencyCode())
+            .orElseThrow(() -> new EntityNotFoundException("Обменный курс не найден"));
+    Currency targetCurrency = currencyDao.findByCode(exchangeRateDto.targetCurrencyCode())
+            .orElseThrow(() -> new EntityNotFoundException("Обменный курс не найден"));
 
     Optional<ExchangeRate> byCurrencyIds = exchangeRateDao.findByCurrencyIds(baseCurrency.getId(), targetCurrency.getId());
 
@@ -122,21 +133,23 @@ public class ExchangeRatesService {
     ExchangeRate exchangeRate = ExchangeRate.builder()
             .baseCurrency(baseCurrency)
             .targetCurrency(targetCurrency)
-            .rate(rate)
+            .rate(exchangeRateDto.rate())
             .build();
 
     return exchangeRateDao.save(exchangeRate);
   }
 
-  public ExchangeRate updateExchangeRate(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
-    return  exchangeRateDao.findByCurrencyCodes(baseCurrencyCode, targetCurrencyCode).stream()
-            .peek(exchangeRate -> exchangeRate.setRate(rate))
+  public ExchangeRate updateExchangeRate(ExchangeRateDto exchangeRateDto) {
+    return exchangeRateDao.findByCurrencyCodes(
+                    exchangeRateDto.baseCurrencyCode(),
+                    exchangeRateDto.targetCurrencyCode()).stream()
+            .peek(exchangeRate -> exchangeRate.setRate(exchangeRateDto.rate()))
             .map(exchangeRate -> exchangeRateDao.save(exchangeRate))
             .findFirst()
             .orElseThrow(() -> new EntityNotFoundException("Валютная пара отсутствует в базе данных"));
   }
 
-  public void deleteExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
-    exchangeRateDao.delete(getExchangeRateByCurrencyCodes(baseCurrencyCode, targetCurrencyCode));
+  public void deleteExchangeRate(ExchangeRateDto exchangeRateDto) {
+    exchangeRateDao.delete(getExchangeRateByCurrencyCodes(exchangeRateDto));
   }
 }

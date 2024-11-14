@@ -1,6 +1,7 @@
 package com.move.web.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.dto.ExchangeRateDto;
 import com.move.exception.ParamAbsenceException;
 import com.move.model.ExchangeRate;
 import com.move.service.exchange.ExchangeRatesService;
@@ -32,14 +33,22 @@ public class ExchangeRatesController extends HttpServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     Map<String, String[]> requestParams = request.getParameterMap();
 
-    if (requestParams.size() != 3){
+    if (requestParams.size() != 3) {
       throw new ParamAbsenceException("Отсутствует нужное поле формы");
     }
 
     String baseCurrencyCode = request.getParameter("baseCurrencyCode");
     String targetCurrencyCode = request.getParameter("targetCurrencyCode");
     BigDecimal rate = new BigDecimal(request.getParameter("rate"));
-    ExchangeRate exchangeRate = exchangeRatesService.addExchangeRate(baseCurrencyCode, targetCurrencyCode, rate);
+
+
+    ExchangeRate exchangeRate = exchangeRatesService.addExchangeRate(
+            ExchangeRateDto.builder()
+                    .baseCurrencyCode(baseCurrencyCode)
+                    .targetCurrencyCode(targetCurrencyCode)
+                    .rate(rate)
+                    .build()
+    );
 
     response.setStatus(HttpServletResponse.SC_CREATED);
     objectMapper.writerWithDefaultPrettyPrinter()
