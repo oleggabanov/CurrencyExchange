@@ -1,4 +1,4 @@
-package com.move.utils;
+package com.move.web.filter;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
