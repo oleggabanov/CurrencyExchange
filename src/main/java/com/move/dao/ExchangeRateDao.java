@@ -8,4 +8,6 @@ public interface ExchangeRateDao extends CrudDao<ExchangeRate, Integer> {
 
   Optional<ExchangeRate> findByCurrencyIds(int baseCurrencyId, int targetCurrencyId);
 
+  Optional<ExchangeRate> findByCurrencyCodes(String baseCurrencyCode, String targetCurrencyCode);
+
 }
