@@ -1,4 +1,4 @@
-package com.move.exceptions;
+package com.move.exception;
 
 public class EntityNotFoundException extends RuntimeException {
 

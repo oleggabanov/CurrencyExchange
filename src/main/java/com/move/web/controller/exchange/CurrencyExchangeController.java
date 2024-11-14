@@ -1,4 +1,4 @@
-package com.move.controller.exchange;
+package com.move.web.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.model.CurrencyExchange;
@@ -27,8 +27,6 @@ public class CurrencyExchangeController extends HttpServlet {
 
     objectMapper.writerWithDefaultPrettyPrinter()
             .writeValue(resp.getWriter(), currencyExchange);
-
-
   }
 
 }

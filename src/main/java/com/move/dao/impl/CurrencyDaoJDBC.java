@@ -1,7 +1,7 @@
-package com.move.dao;
+package com.move.dao.impl;
 
-import com.move.exceptions.EntityAlreadyExistsException;
-import com.move.exceptions.EntityNotFoundException;
+import com.move.dao.CurrencyDao;
+import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
 
 import java.sql.*;
@@ -46,15 +46,14 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       PreparedStatement preparedStatement = connection.prepareStatement("select * from currencies where code = (?);");
       preparedStatement.setString(1, currencyCode);
       ResultSet resultSet = preparedStatement.executeQuery();
-      if (resultSet.getString("code") == null) {
-        throw new EntityNotFoundException("Currency not found");
-      }
-      return Optional.ofNullable(Currency.builder()
+
+      return resultSet.next() ? Optional.ofNullable(Currency.builder()
               .id(resultSet.getInt("id"))
               .code(resultSet.getString("code"))
               .fullName(resultSet.getString("full_name"))
               .sign(resultSet.getString("sign"))
-              .build());
+              .build()) : Optional.empty();
+
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -77,7 +76,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
               .orElseThrow(RuntimeException::new);
     } catch (SQLException e) {
       if (e.getErrorCode() == 19) { //check existence of currency
-        throw new EntityAlreadyExistsException("Такая валюта уже есть в бд");
+        throw new EntityAlreadyExistsException("Проверьте корректность вводимых данных и повторите попытку");
       }
       throw new RuntimeException(e);
     }
