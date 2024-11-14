@@ -1,6 +1,7 @@
 package com.move.web.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.context.AppContext;
 import com.move.model.CurrencyExchange;
 import com.move.service.exchange.CurrencyExchangeService;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 @WebServlet("/exchange")
 public class CurrencyExchangeController extends HttpServlet {
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
   private CurrencyExchangeService currencyExchangeService = new CurrencyExchangeService();
 
   @Override

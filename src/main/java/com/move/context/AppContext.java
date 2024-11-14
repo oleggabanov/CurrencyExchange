@@ -1,5 +1,6 @@
 package com.move.context;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.dao.CurrencyDao;
 import com.move.dao.ExchangeRateDao;
 import com.move.dao.impl.CurrencyDaoJDBC;
@@ -15,6 +16,7 @@ public class AppContext {
   private CurrencyDao currencyDao;
   private ExchangeRateDao exchangeRateDao;
   private Connection connection;
+  private ObjectMapper objectMapper;
 
   private AppContext() {
   }
@@ -28,6 +30,7 @@ public class AppContext {
 
   public void initialize(Connection connection) {
     this.connection = connection;
+    this.objectMapper = new ObjectMapper();
     this.currencyDao = new CurrencyDaoJDBC(connection);
     this.exchangeRateDao = new ExchangeRateDaoJDBC(connection);
   }

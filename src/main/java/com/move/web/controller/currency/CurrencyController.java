@@ -1,6 +1,7 @@
 package com.move.web.controller.currency;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.context.AppContext;
 import com.move.exception.ParamAbsenceException;
 import com.move.service.currency.CurrenciesService;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,7 +14,7 @@ import java.io.IOException;
 @WebServlet("/currency/*")
 public class CurrencyController extends HttpServlet {
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
   private CurrenciesService currenciesService = new CurrenciesService();
 
   @Override

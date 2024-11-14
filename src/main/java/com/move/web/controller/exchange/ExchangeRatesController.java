@@ -1,6 +1,7 @@
 package com.move.web.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.context.AppContext;
 import com.move.dto.ExchangeRateDto;
 import com.move.exception.ParamAbsenceException;
 import com.move.model.ExchangeRate;
@@ -17,7 +18,7 @@ import java.util.Map;
 @WebServlet("/exchangeRates")
 public class ExchangeRatesController extends HttpServlet {
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
   private ExchangeRatesService exchangeRatesService = new ExchangeRatesService();
 
   @Override
