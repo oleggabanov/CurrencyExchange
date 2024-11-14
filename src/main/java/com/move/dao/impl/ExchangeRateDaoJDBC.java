@@ -111,8 +111,51 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
   }
 
   @Override
+  public Optional<ExchangeRate> findByCurrencyCodes(String baseCurrencyCode, String targetCurrencyCode) {
+    String sqlQuery = """   
+            %s
+            where cb.code = (?) AND ct.code =(?);
+            """.formatted(SQL_QUERY);
+    ResultSet resultSet;
+
+    try {
+      PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+      preparedStatement.setString(1, baseCurrencyCode);
+      preparedStatement.setString(2, targetCurrencyCode);
+      resultSet = preparedStatement.executeQuery();
+      Currency baseCurrency = Currency.builder()
+              .id(resultSet.getInt("base_currency_id"))
+              .code(resultSet.getString("base_currency_code"))
+              .fullName(resultSet.getString("base_currency_name"))
+              .sign(resultSet.getString("base_currency_sign"))
+              .build();
+
+      Currency targetCurrency = Currency.builder()
+              .id(resultSet.getInt("target_currency_id"))
+              .code(resultSet.getString("target_currency_code"))
+              .fullName(resultSet.getString("target_currency_name"))
+              .sign(resultSet.getString("target_currency_sign"))
+              .build();
+
+      ExchangeRate exchangeRate = ExchangeRate.builder()
+              .id(resultSet.getInt("exchange_rate_id"))
+              .baseCurrency(baseCurrency)
+              .targetCurrency(targetCurrency)
+              .rate(resultSet.getBigDecimal("rate"))
+              .build();
+
+      return exchangeRate.getRate() != null ? Optional.ofNullable(exchangeRate) : Optional.empty();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
   public ExchangeRate save(ExchangeRate exchangeRate) {
-    Optional<ExchangeRate> findByIds = findByCurrencyIds(exchangeRate.getBaseCurrency().getId(), exchangeRate.getTargetCurrency().getId());
+    Optional<ExchangeRate> findByIds = findByCurrencyIds(
+            exchangeRate.getBaseCurrency().getId(),
+            exchangeRate.getTargetCurrency().getId()
+    );
     String sqlQuery = findByIds.isPresent()
             ? "update exchange_rates set rate = (?) where base_currency_id = (?) and target_currency_id = (?);"
             : "insert into exchange_rates (rate, base_currency_id, target_currency_id) values (?, ?, ?);";
@@ -125,7 +168,9 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
       preparedStatement.setInt(3, targetCurrencyId);
       preparedStatement.executeUpdate();
       connection.commit();
-      return findByCurrencyIds(baseCurrencyId, targetCurrencyId).orElseThrow(RuntimeException::new);
+
+      return findByCurrencyIds(baseCurrencyId, targetCurrencyId)
+              .orElseThrow(RuntimeException::new);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
