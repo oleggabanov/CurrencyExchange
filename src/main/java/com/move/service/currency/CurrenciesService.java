@@ -3,6 +3,7 @@ package com.move.service.currency;
 import com.move.context.AppContext;
 import com.move.dao.CurrencyDao;
 import com.move.dto.CurrencyDto;
+import com.move.exception.EntityNotFoundException;
 import com.move.model.Currency;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class CurrenciesService {
 
   public Currency getCurrencyByCode(String currencyCode) {
     return currencyDao.findByCode(currencyCode)
-            .orElseThrow(RuntimeException::new);
+            .orElseThrow(() -> new EntityNotFoundException("Валюта не найдена, проверьте корректность вводимых данных и повторите попытку"));
   }
 
   public Currency addCurrency(CurrencyDto currencyParams) {

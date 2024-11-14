@@ -1,58 +1,35 @@
 package com.move.service.exchange;
 
-import com.move.dao.CurrenciesDao;
-import com.move.dao.ExchangeRatesDao;
-import com.move.dto.ExchangeRateDto;
-import com.move.model.CurrencyResponse;
+import com.move.context.AppContext;
+import com.move.dao.CurrencyDao;
+import com.move.dao.ExchangeRateDao;
+import com.move.exception.EntityAlreadyExistsException;
+import com.move.exception.EntityNotFoundException;
+import com.move.model.Currency;
 import com.move.model.ExchangeRate;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.SneakyThrows;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-
-import static com.move.service.serviceUtils.ServiceUtils.getCurrencyFromResultSet;
-import static com.move.service.serviceUtils.ServiceUtils.getExchangeRate;
+import java.util.Optional;
 
 public class ExchangeRatesService {
 
-  private ExchangeRatesDao exchangeRatesDao;
-  private CurrenciesDao currenciesDao;
+  private CurrencyDao currencyDao;
+  private ExchangeRateDao exchangeRateDao;
 
   public ExchangeRatesService() {
-    this.exchangeRatesDao = new ExchangeRatesDao();
-    this.currenciesDao = new CurrenciesDao();
+    this.currencyDao = AppContext.getInstance().getCurrencyDao();
+    this.exchangeRateDao = AppContext.getInstance().getExchangeRateDao();
   }
 
-  public List<ExchangeRate> getAllExchangeRates() throws SQLException {
-    ResultSet resultSet = exchangeRatesDao.findExchangeRatesFromDB();
-    List<ExchangeRate> exchangeRates = new ArrayList<>();
-    while (resultSet.next()) {
-      int baseCurrencyId = resultSet.getInt("base_currency_id");
-      int targetCurrencyId = resultSet.getInt("target_currency_id");
-      CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByIdFromDB(baseCurrencyId));
-      CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByIdFromDB(targetCurrencyId));
-      ExchangeRate exchangeRate = ExchangeRate.builder()
-              .id(resultSet.getInt("id"))
-              .baseCurrency(baseCurrency)
-              .targetCurrency(targetCurrency)
-              .rate(resultSet.getBigDecimal("rate"))
-              .build();
-
-      exchangeRates.add(exchangeRate);
-    }
-
-    return exchangeRates;
+  public List<ExchangeRate> getAllExchangeRates() {
+    return exchangeRateDao.findAll();
   }
 
 
-  @SneakyThrows
   public ExchangeRate getExchangeRateByCurrencyCodes(String baseCurrencyCode, String targetCurrencyCode) {
-    CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
-    CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
+    Currency baseCurrency = currencyDao.findByCode(baseCurrencyCode).orElseThrow();
+    Currency targetCurrency = currencyDao.findByCode(targetCurrencyCode).orElseThrow();
     ExchangeRate exchangeRate;
 
     exchangeRate = getStraightAndReverseExchangeRate(baseCurrency, targetCurrency);
@@ -63,38 +40,45 @@ public class ExchangeRatesService {
     return exchangeRate;
   }
 
-  private ExchangeRate getStraightAndReverseExchangeRate(CurrencyResponse baseCurrency, CurrencyResponse targetCurrency) throws SQLException {
-    ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(baseCurrency.getId(), targetCurrency.getId());
-    BigDecimal rate = resultSet.getBigDecimal("rate");
+  private ExchangeRate getExchangeRate(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
+    ExchangeRate exchangeRate = ExchangeRate.builder()
+            .id(id)
+            .baseCurrency(baseCurrency)
+            .targetCurrency(targetCurrency)
+            .rate(rate)
+            .build();
+    return exchangeRate;
+  }
 
-    if (rate != null) {
-      int id = resultSet.getInt("id");
+  private ExchangeRate getStraightAndReverseExchangeRate(Currency baseCurrency, Currency targetCurrency) {
+    Optional<ExchangeRate> findByCurrencyIds = exchangeRateDao.findByCurrencyIds(baseCurrency.getId(), targetCurrency.getId());
+    BigDecimal rate;
+    if (findByCurrencyIds.isPresent()) {
+      int id = findByCurrencyIds.get().getId();
+      rate = findByCurrencyIds.get().getRate();
       return getExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
 
-    resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(targetCurrency.getId(), baseCurrency.getId());
-    rate = resultSet.getBigDecimal("rate");
-    if (rate != null) {
+    findByCurrencyIds = exchangeRateDao.findByCurrencyIds(targetCurrency.getId(), baseCurrency.getId());
+    if (findByCurrencyIds.isPresent()) {
+      rate = findByCurrencyIds.get().getRate();
       rate = BigDecimal.valueOf(1).divide(rate, 7, BigDecimal.ROUND_HALF_UP);
-      ExchangeRateDto exchangeRateDto = ExchangeRateDto.builder()
-              .baseCurrencyId(baseCurrency.getId())
-              .targetCurrencyId(targetCurrency.getId())
+      ExchangeRate exchangeRate = ExchangeRate.builder()
+              .baseCurrency(baseCurrency)
+              .targetCurrency(targetCurrency)
               .rate(rate)
               .build();
-      ResultSet savedExchangeRate = exchangeRatesDao.addExchangeRateToDB(exchangeRateDto);
-      int id = savedExchangeRate.getInt("id");
-      return getExchangeRate(id, baseCurrency, targetCurrency, rate);
+      return exchangeRateDao.save(exchangeRate);
     }
     return null;
   }
 
-  private ExchangeRate getCrossExchangeRate(CurrencyResponse baseCurrency, CurrencyResponse targetCurrency) throws SQLException {
-
+  private ExchangeRate getCrossExchangeRate(Currency baseCurrency, Currency targetCurrency) {
     ExchangeRate exchangeRate1 = null;
     ExchangeRate exchangeRate2 = null;
     BigDecimal rate;
-    CurrencyResponse currency1;
-    CurrencyResponse currency2;
+    Currency currency1;
+    Currency currency2;
     for (ExchangeRate eRate : getAllExchangeRates()) {
       currency1 = eRate.getBaseCurrency();
       currency2 = eRate.getTargetCurrency();
@@ -112,62 +96,47 @@ public class ExchangeRatesService {
       }
 
     }
-    rate = exchangeRate1.getRate().multiply(exchangeRate2.getRate());
+
+    if (exchangeRate1 != null && exchangeRate2 != null) {
+      rate = exchangeRate1.getRate().multiply(exchangeRate2.getRate());
+    } else {
+      throw new EntityNotFoundException("Обменный курс для пары не найден");
+    }
+
     exchangeRate1 = addExchangeRate(baseCurrency.getCode(), targetCurrency.getCode(), rate);
 
     return exchangeRate1;
   }
 
 
-  @SneakyThrows
   public ExchangeRate addExchangeRate(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
-    CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
-    CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
-    ExchangeRateDto exchangeRateDto = ExchangeRateDto.builder()
-            .baseCurrencyId(baseCurrency.getId())
-            .targetCurrencyId(targetCurrency.getId())
-            .rate(rate)
-            .build();
-    ResultSet resultSet = exchangeRatesDao.addExchangeRateToDB(exchangeRateDto);
+    Currency baseCurrency = currencyDao.findByCode(baseCurrencyCode).orElseThrow(() -> new EntityNotFoundException("Обменный курс не найден"));
+    Currency targetCurrency = currencyDao.findByCode(targetCurrencyCode).orElseThrow(() -> new EntityNotFoundException("Обменный курс не найден"));
+
+    Optional<ExchangeRate> byCurrencyIds = exchangeRateDao.findByCurrencyIds(baseCurrency.getId(), targetCurrency.getId());
+
+    if (byCurrencyIds.isPresent()) {
+      throw new EntityAlreadyExistsException("Валютная пара с таким кодом уже существует");
+    }
 
     ExchangeRate exchangeRate = ExchangeRate.builder()
-            .id(resultSet.getInt("id"))
             .baseCurrency(baseCurrency)
             .targetCurrency(targetCurrency)
-            .rate(resultSet.getBigDecimal("rate"))
+            .rate(rate)
             .build();
-    return exchangeRate;
+
+    return exchangeRateDao.save(exchangeRate);
   }
 
-  @SneakyThrows
   public ExchangeRate updateExchangeRate(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
-    CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
-    CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
-
-    ExchangeRateDto exchangeRateDto = ExchangeRateDto.builder()
-            .baseCurrencyId(baseCurrency.getId())
-            .targetCurrencyId(targetCurrency.getId())
-            .rate(rate)
-            .build();
-
-    ResultSet resultSet = exchangeRatesDao.updateExchangeRateInDB(exchangeRateDto);
-
-    ExchangeRate exchangeRate = ExchangeRate.builder()
-            .id(resultSet.getInt("id"))
-            .baseCurrency(baseCurrency)
-            .targetCurrency(targetCurrency)
-            .rate(resultSet.getBigDecimal("rate"))
-            .build();
-
-    return exchangeRate;
+    return  exchangeRateDao.findByCurrencyCodes(baseCurrencyCode, targetCurrencyCode).stream()
+            .peek(exchangeRate -> exchangeRate.setRate(rate))
+            .map(exchangeRate -> exchangeRateDao.save(exchangeRate))
+            .findFirst()
+            .orElseThrow(() -> new EntityNotFoundException("Валютная пара отсутствует в базе данных"));
   }
 
-  @SneakyThrows
-  public int deleteExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
-    CurrencyResponse baseCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(baseCurrencyCode));
-    CurrencyResponse targetCurrency = getCurrencyFromResultSet(currenciesDao.findCurrencyByCodeFromDB(targetCurrencyCode));
-    ResultSet resultSet = exchangeRatesDao.findExchangeRateByCurrenciesId(baseCurrency.getId(), targetCurrency.getId());
-    boolean isExchangeRateDeleted = exchangeRatesDao.deleteExchangeRateByCurrencyCodesFromDB(resultSet.getInt("id"));
-    return isExchangeRateDeleted ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+  public void deleteExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
+    exchangeRateDao.delete(getExchangeRateByCurrencyCodes(baseCurrencyCode, targetCurrencyCode));
   }
 }
