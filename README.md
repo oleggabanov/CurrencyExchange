@@ -2,7 +2,7 @@
 
 ## Description 
 
----
+
 This api allow you to watch and edit currency and exchange rates,
 calculate and convert one currency to another. I implemented crud interface, used integrated sqlite db.
 
@@ -17,13 +17,10 @@ calculate and convert one currency to another. I implemented crud interface, use
 
 ## Database Diagram
 
----
-
 ![DatabaseDiagrams](https://github.com/oleggabanov/CurrencyExchange/blob/main/src/main/resources/img/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-11-15%20125658.png)
 
 ## Crud methods
 
----
 
 ### Currencies
 
@@ -31,7 +28,7 @@ calculate and convert one currency to another. I implemented crud interface, use
 
 Returns list of all currencies. Example of response:
 
-```
+```json
   {
     "id": 1,
     "code": "USD",
@@ -56,7 +53,7 @@ Returns list of all currencies. Example of response:
 
 Returns particular currency:
 
-```
+```json
   {
     "id": 3,
     "code": "RUB",
@@ -69,7 +66,7 @@ Returns particular currency:
 
 Add new currency by `x-www-form-urlencoded` params `name, code, sign`. Method will return json response:
 
-```
+```json
 {
   "id": 4,
   "code": "KZT",
@@ -84,7 +81,7 @@ Add new currency by `x-www-form-urlencoded` params `name, code, sign`. Method wi
 
 Returns list of all exchange rates. Example of response:
 
-```
+```json
 {
     "id": 1,
     "baseCurrency": {
@@ -123,7 +120,7 @@ Returns list of all exchange rates. Example of response:
 
 Returns particular exchange rate by currency codes:
 
-```
+```json
 {
   "id": 3,
   "baseCurrency": {
@@ -146,7 +143,7 @@ Returns particular exchange rate by currency codes:
 
 Add new exchange rate. The data is transferred in the request body as form fields `x-www-form-urlencoded`. Form fields: `baseCurrencyCode`, `targetCurrencyCode`, `rate`. JSON response is the db insertion:
 
-```
+```json
 {
   "id": 4,
   "baseCurrency": {
@@ -168,7 +165,8 @@ Add new exchange rate. The data is transferred in the request body as form field
 ***PATCH `/exchangeRate/`USDRUB?rate=99.83***
 
 Update of exchange rate, response is the db insertion:
-```
+
+```json
 {
   "id": 3,
   "baseCurrency": {
@@ -193,7 +191,7 @@ Update of exchange rate, response is the db insertion:
 
 Calculate amount of funds from one currency to another. Response example:
 
-```
+```json
 {
   "baseCurrency": {
     "id": 1,
