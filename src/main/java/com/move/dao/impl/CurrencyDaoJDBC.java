@@ -3,11 +3,14 @@ package com.move.dao.impl;
 import com.move.dao.CurrencyDao;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
+import org.sqlite.SQLiteException;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.sqlite.SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE;
 
 public class CurrencyDaoJDBC implements CurrencyDao {
 
@@ -24,13 +27,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       Statement statement = connection.createStatement();
       ResultSet resultSet = statement.executeQuery(sqlQuery);
       while (resultSet.next()) {
-        Currency currency = Currency.builder()
-                .id(resultSet.getInt("id"))
-                .code(resultSet.getString("code"))
-                .fullName(resultSet.getString("full_name"))
-                .sign(resultSet.getString("sign"))
-                .build();
-
+        Currency currency = buildCurrency(resultSet);
         currencies.add(currency);
       }
       return currencies;
@@ -47,24 +44,23 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       preparedStatement.setString(1, currencyCode);
       ResultSet resultSet = preparedStatement.executeQuery();
 
-      return resultSet.next() ? Optional.ofNullable(Currency.builder()
-              .id(resultSet.getInt("id"))
-              .code(resultSet.getString("code"))
-              .fullName(resultSet.getString("full_name"))
-              .sign(resultSet.getString("sign"))
-              .build()) : Optional.empty();
-
+      return resultSet.next() ? Optional.ofNullable(buildCurrency(resultSet)) : Optional.empty();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public Currency save(Currency newCurrency) {
+  public Currency save(Currency currency) {
+
     try {
-      String currencyCode = newCurrency.getCode();
-      String fullName = newCurrency.getFullName();
-      String sign = newCurrency.getSign();
+      String currencyCode = currency.getCode();
+      String fullName = currency.getFullName();
+      String sign = currency.getSign();
+
+      if (findByCode(currencyCode).isPresent()) {
+        throw new EntityAlreadyExistsException("Currency already exists, Да да, это там где ты чекал на exist");
+      }
       PreparedStatement preparedStatement = connection
               .prepareStatement("insert into currencies (code, full_name, sign) values (?,?,?);");
       preparedStatement.setString(1, currencyCode);
@@ -75,9 +71,6 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       return findByCode(currencyCode)
               .orElseThrow(RuntimeException::new);
     } catch (SQLException e) {
-      if (e.getErrorCode() == 19) { //check existence of currency
-        throw new EntityAlreadyExistsException("Проверьте корректность вводимых данных и повторите попытку");
-      }
       throw new RuntimeException(e);
     }
   }
@@ -88,12 +81,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       PreparedStatement preparedStatement = connection.prepareStatement("select * from currencies where id = (?);");
       preparedStatement.setInt(1, currencyId);
       ResultSet resultSet = preparedStatement.executeQuery();
-      return Optional.ofNullable(Currency.builder()
-              .id(resultSet.getInt("id"))
-              .code(resultSet.getString("code"))
-              .fullName(resultSet.getString("full_name"))
-              .sign(resultSet.getString("sign"))
-              .build());
+      return Optional.ofNullable(buildCurrency(resultSet));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -102,5 +90,14 @@ public class CurrencyDaoJDBC implements CurrencyDao {
   @Override
   public void delete(Currency currency) {
     throw new UnsupportedOperationException("Not supported yet");
+  }
+
+  private static Currency buildCurrency(ResultSet resultSet) throws SQLException {
+    return Currency.builder()
+            .id(resultSet.getInt("id"))
+            .code(resultSet.getString("code"))
+            .fullName(resultSet.getString("full_name"))
+            .sign(resultSet.getString("sign"))
+            .build();
   }
 }
