@@ -3,6 +3,7 @@ package com.move.web.controller.currency;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.context.AppContext;
 import com.move.exception.ParamAbsenceException;
+import com.move.exception.WrongParamException;
 import com.move.service.currency.CurrencyService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,15 +20,19 @@ public class CurrencyController extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String[] pathInfo = request.getRequestURI().split("/");
-
-    if (pathInfo.length != 3) {
+    String[] requestURI = request.getRequestURI().split("/");
+    String code = requestURI[requestURI.length - 1];
+    if (requestURI.length != 3) {
       throw new ParamAbsenceException("Код валюты отсутствует в адресе");
+    }
+
+    if (code.length() != 3){
+      throw new WrongParamException("Код валюты должен состоять из трех символов");
     }
 
     response.setStatus(HttpServletResponse.SC_OK);
     objectMapper.writerWithDefaultPrettyPrinter()
-            .writeValue(response.getWriter(), currencyService.getCurrencyByCode(pathInfo[pathInfo.length - 1]));
+            .writeValue(response.getWriter(), currencyService.getCurrencyByCode(code));
   }
 
 }
