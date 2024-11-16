@@ -13,12 +13,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeRatesService {
+public class ExchangeRateService {
 
   private CurrencyDao currencyDao;
   private ExchangeRateDao exchangeRateDao;
 
-  public ExchangeRatesService() {
+  public ExchangeRateService() {
     this.currencyDao = AppContext.getInstance().getCurrencyDao();
     this.exchangeRateDao = AppContext.getInstance().getExchangeRateDao();
   }
@@ -35,7 +35,7 @@ public class ExchangeRatesService {
             .orElseThrow();
     ExchangeRate exchangeRate;
 
-    exchangeRate = getStraightAndReverseExchangeRate(baseCurrency, targetCurrency);
+    exchangeRate = getStraightOrReverseExchangeRate(baseCurrency, targetCurrency);
     if (exchangeRate == null) {
       exchangeRate = getCrossExchangeRate(baseCurrency, targetCurrency);
     }
@@ -53,7 +53,7 @@ public class ExchangeRatesService {
     return exchangeRate;
   }
 
-  private ExchangeRate getStraightAndReverseExchangeRate(Currency baseCurrency, Currency targetCurrency) {
+  private ExchangeRate getStraightOrReverseExchangeRate(Currency baseCurrency, Currency targetCurrency) {
     Optional<ExchangeRate> findByCurrencyIds = exchangeRateDao.findByCurrencyIds(baseCurrency.getId(), targetCurrency.getId());
     BigDecimal rate;
     if (findByCurrencyIds.isPresent()) {
@@ -87,14 +87,14 @@ public class ExchangeRatesService {
       currency2 = eRate.getTargetCurrency();
 
       if (baseCurrency.getCode().equals(currency1.getCode())) {
-        exchangeRate1 = getStraightAndReverseExchangeRate(baseCurrency, currency2);
-        exchangeRate2 = getStraightAndReverseExchangeRate(currency2, targetCurrency);
+        exchangeRate1 = getStraightOrReverseExchangeRate(baseCurrency, currency2);
+        exchangeRate2 = getStraightOrReverseExchangeRate(currency2, targetCurrency);
         break;
       }
 
       if (baseCurrency.getCode().equals(currency2.getCode())) {
-        exchangeRate1 = getStraightAndReverseExchangeRate(baseCurrency, currency1);
-        exchangeRate2 = getStraightAndReverseExchangeRate(currency1, targetCurrency);
+        exchangeRate1 = getStraightOrReverseExchangeRate(baseCurrency, currency1);
+        exchangeRate2 = getStraightOrReverseExchangeRate(currency1, targetCurrency);
         break;
       }
 
