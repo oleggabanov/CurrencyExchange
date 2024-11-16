@@ -2,6 +2,7 @@ package com.move.web.controller.exchange;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.context.AppContext;
+import com.move.dto.CurrencyExchangeDto;
 import com.move.model.CurrencyExchange;
 import com.move.service.exchange.CurrencyExchangeService;
 import jakarta.servlet.annotation.WebServlet;
@@ -23,8 +24,12 @@ public class CurrencyExchangeController extends HttpServlet {
     String baseCurrencyCode = req.getParameter("from");
     String targetCurrencyCode = req.getParameter("to");
     BigDecimal amount = new BigDecimal(req.getParameter("amount"));
-
-    CurrencyExchange currencyExchange = currencyExchangeService.convertCurrency(baseCurrencyCode, targetCurrencyCode, amount);
+    CurrencyExchangeDto currencyExchangeDto = CurrencyExchangeDto.builder()
+            .baseCurrencyCode(baseCurrencyCode)
+            .targetCurrencyCode(targetCurrencyCode)
+            .amount(amount)
+            .build();
+    CurrencyExchange currencyExchange = currencyExchangeService.convertCurrency(currencyExchangeDto);
 
     objectMapper.writerWithDefaultPrettyPrinter()
             .writeValue(resp.getWriter(), currencyExchange);
