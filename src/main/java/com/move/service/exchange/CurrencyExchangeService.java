@@ -1,5 +1,6 @@
 package com.move.service.exchange;
 
+import com.move.dto.CurrencyExchangeDto;
 import com.move.dto.ExchangeRateDto;
 import com.move.model.CurrencyExchange;
 import com.move.model.ExchangeRate;
@@ -9,20 +10,21 @@ import java.math.BigDecimal;
 
 public class CurrencyExchangeService {
 
-  private ExchangeRatesService exchangeRatesService;
+  private ExchangeRateService exchangeRateService;
 
   public CurrencyExchangeService() {
-    this.exchangeRatesService = new ExchangeRatesService();
+    this.exchangeRateService = new ExchangeRateService();
   }
 
   @SneakyThrows
-  public CurrencyExchange convertCurrency(String baseCurrencyCode, String targetCurrencyCode, BigDecimal amount) {
-    ExchangeRate exchangeRate = exchangeRatesService.getExchangeRateByCurrencyCodes(
+  public CurrencyExchange convertCurrency(CurrencyExchangeDto currencyExchangeDto) {
+    ExchangeRate exchangeRate = exchangeRateService.getExchangeRateByCurrencyCodes(
             ExchangeRateDto.builder()
-                    .baseCurrencyCode(baseCurrencyCode)
-                    .targetCurrencyCode(targetCurrencyCode)
+                    .baseCurrencyCode(currencyExchangeDto.baseCurrencyCode())
+                    .targetCurrencyCode(currencyExchangeDto.targetCurrencyCode())
                     .build()
     );
+    BigDecimal amount = currencyExchangeDto.amount();
     BigDecimal rate = exchangeRate.getRate();
     BigDecimal convertedAmount = amount.multiply(rate);
 
