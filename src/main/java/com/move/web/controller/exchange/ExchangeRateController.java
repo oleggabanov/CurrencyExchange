@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.context.AppContext;
 import com.move.dto.ExchangeRateDto;
 import com.move.exception.ParamAbsenceException;
+import com.move.exception.WrongParamException;
 import com.move.model.ExchangeRate;
 import com.move.service.exchange.ExchangeRateService;
 import jakarta.servlet.annotation.WebServlet;
@@ -30,7 +31,6 @@ public class ExchangeRateController extends HttpServlet {
     String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
-
     ExchangeRate exchangeRate = exchangeRateService.getExchangeRateByCurrencyCodes(
             ExchangeRateDto.builder()
                     .baseCurrencyCode(baseCurrencyCode)
@@ -48,17 +48,22 @@ public class ExchangeRateController extends HttpServlet {
     String stringRate = request.getReader()
             .lines()
             .reduce("", (a, b) -> a + b);
-    String requestURI = request.getRequestURI();
-    String[] uri = requestURI.split("/");
-    String exchangeRateCodes = uri[uri.length - 1];
-    String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
-    String targetCurrencyCode = exchangeRateCodes.substring(3);
 
     if (stringRate.isEmpty()) {
       throw new ParamAbsenceException("Отсутствует нужное поле формы");
     }
 
     BigDecimal rate = new BigDecimal(stringRate.split("=")[1]);
+    String[] requestURI = request.getRequestURI().split("/");
+    String exchangeRateCodes = requestURI[requestURI.length - 1];
+    boolean isLengthOfCodesFit = exchangeRateCodes.length() == 6;
+    String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
+    String targetCurrencyCode = exchangeRateCodes.substring(3);
+
+    if (!isLengthOfCodesFit || rate.compareTo(BigDecimal.ZERO) < 0 || baseCurrencyCode.equals(targetCurrencyCode)) {
+      throw new WrongParamException("Каждый код валюты должен состоять из 3 символов и не повторять другой. Курс валютной пары должен быть положительным числом");
+    }
+
     ExchangeRate exchangeRate = exchangeRateService.updateExchangeRate(
             ExchangeRateDto.builder()
                     .baseCurrencyCode(baseCurrencyCode)
@@ -75,6 +80,11 @@ public class ExchangeRateController extends HttpServlet {
     String requestURI = request.getRequestURI();
     String[] uri = requestURI.split("/");
     String exchangeRateCodes = uri[uri.length - 1];
+
+    if (exchangeRateCodes.length() != 6) {
+      throw new WrongParamException("Каждый код валюты должен состоять из 3 символов");
+    }
+
     String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
