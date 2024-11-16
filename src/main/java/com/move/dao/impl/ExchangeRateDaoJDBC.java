@@ -1,6 +1,7 @@
 package com.move.dao.impl;
 
 import com.move.dao.ExchangeRateDao;
+import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
 import com.move.model.ExchangeRate;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 public class ExchangeRateDaoJDBC implements ExchangeRateDao {
 
   private Connection connection;
+
   private static final String SQL_QUERY = """
            SELECT er.id        AS exchange_rate_id,
                    cb.id        AS base_currency_id,
@@ -36,32 +38,15 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
 
   @Override
   public List<ExchangeRate> findAll() {
+    String findAllQuery = """
+            %s;
+            """;
     try {
       Statement statement = connection.createStatement();
-      ResultSet resultSet = statement.executeQuery(SQL_QUERY + ";");
+      ResultSet resultSet = statement.executeQuery(findAllQuery.formatted(SQL_QUERY));
       List<ExchangeRate> exchangeRates = new ArrayList<>();
       while (resultSet.next()) {
-        Currency baseCurrency = Currency.builder()
-                .id(resultSet.getInt("base_currency_id"))
-                .code(resultSet.getString("base_currency_code"))
-                .fullName(resultSet.getString("base_currency_name"))
-                .sign(resultSet.getString("base_currency_sign"))
-                .build();
-
-        Currency targetCurrency = Currency.builder()
-                .id(resultSet.getInt("target_currency_id"))
-                .code(resultSet.getString("target_currency_code"))
-                .fullName(resultSet.getString("target_currency_name"))
-                .sign(resultSet.getString("target_currency_sign"))
-                .build();
-
-        ExchangeRate exchangeRate = ExchangeRate.builder()
-                .id(resultSet.getInt("exchange_rate_id"))
-                .baseCurrency(baseCurrency)
-                .targetCurrency(targetCurrency)
-                .rate(resultSet.getBigDecimal("rate"))
-                .build();
-
+        ExchangeRate exchangeRate = buildExchangeRate(resultSet);
         exchangeRates.add(exchangeRate);
       }
       return exchangeRates;
@@ -69,6 +54,29 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
       throw new RuntimeException(e);
     }
 
+  }
+
+  private ExchangeRate buildExchangeRate(ResultSet resultSet) throws SQLException {
+    Currency baseCurrency = Currency.builder()
+            .id(resultSet.getInt("base_currency_id"))
+            .code(resultSet.getString("base_currency_code"))
+            .fullName(resultSet.getString("base_currency_name"))
+            .sign(resultSet.getString("base_currency_sign"))
+            .build();
+
+    Currency targetCurrency = Currency.builder()
+            .id(resultSet.getInt("target_currency_id"))
+            .code(resultSet.getString("target_currency_code"))
+            .fullName(resultSet.getString("target_currency_name"))
+            .sign(resultSet.getString("target_currency_sign"))
+            .build();
+
+    return ExchangeRate.builder()
+            .id(resultSet.getInt("exchange_rate_id"))
+            .baseCurrency(baseCurrency)
+            .targetCurrency(targetCurrency)
+            .rate(resultSet.getBigDecimal("rate"))
+            .build();
   }
 
   public Optional<ExchangeRate> findByCurrencyIds(int baseCurrencyId, int targetCurrencyId) {
@@ -83,26 +91,7 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
       preparedStatement.setInt(1, baseCurrencyId);
       preparedStatement.setInt(2, targetCurrencyId);
       resultSet = preparedStatement.executeQuery();
-      Currency baseCurrency = Currency.builder()
-              .id(resultSet.getInt("base_currency_id"))
-              .code(resultSet.getString("base_currency_code"))
-              .fullName(resultSet.getString("base_currency_name"))
-              .sign(resultSet.getString("base_currency_sign"))
-              .build();
-
-      Currency targetCurrency = Currency.builder()
-              .id(resultSet.getInt("target_currency_id"))
-              .code(resultSet.getString("target_currency_code"))
-              .fullName(resultSet.getString("target_currency_name"))
-              .sign(resultSet.getString("target_currency_sign"))
-              .build();
-
-      ExchangeRate exchangeRate = ExchangeRate.builder()
-              .id(resultSet.getInt("exchange_rate_id"))
-              .baseCurrency(baseCurrency)
-              .targetCurrency(targetCurrency)
-              .rate(resultSet.getBigDecimal("rate"))
-              .build();
+      ExchangeRate exchangeRate = buildExchangeRate(resultSet);
 
       return exchangeRate.getRate() != null ? Optional.ofNullable(exchangeRate) : Optional.empty();
     } catch (SQLException e) {
@@ -123,26 +112,7 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
       preparedStatement.setString(1, baseCurrencyCode);
       preparedStatement.setString(2, targetCurrencyCode);
       resultSet = preparedStatement.executeQuery();
-      Currency baseCurrency = Currency.builder()
-              .id(resultSet.getInt("base_currency_id"))
-              .code(resultSet.getString("base_currency_code"))
-              .fullName(resultSet.getString("base_currency_name"))
-              .sign(resultSet.getString("base_currency_sign"))
-              .build();
-
-      Currency targetCurrency = Currency.builder()
-              .id(resultSet.getInt("target_currency_id"))
-              .code(resultSet.getString("target_currency_code"))
-              .fullName(resultSet.getString("target_currency_name"))
-              .sign(resultSet.getString("target_currency_sign"))
-              .build();
-
-      ExchangeRate exchangeRate = ExchangeRate.builder()
-              .id(resultSet.getInt("exchange_rate_id"))
-              .baseCurrency(baseCurrency)
-              .targetCurrency(targetCurrency)
-              .rate(resultSet.getBigDecimal("rate"))
-              .build();
+      ExchangeRate exchangeRate = buildExchangeRate(resultSet);
 
       return exchangeRate.getRate() != null ? Optional.ofNullable(exchangeRate) : Optional.empty();
     } catch (SQLException e) {
@@ -170,7 +140,7 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
       connection.commit();
 
       return findByCurrencyIds(baseCurrencyId, targetCurrencyId)
-              .orElseThrow(RuntimeException::new);
+              .orElseThrow(() -> new EntityAlreadyExistsException("Данная валютная пара уже существует в базе данных, Твое любимое чудо"));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
