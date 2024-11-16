@@ -5,6 +5,7 @@ import com.move.dto.ErrorResponse;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.exception.EntityNotFoundException;
 import com.move.exception.ParamAbsenceException;
+import com.move.exception.WrongParamException;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,9 +27,14 @@ public class CustomExceptionHandlerFilter implements Filter {
     try {
       filterChain.doFilter(servletRequest, servletResponse);
     } catch (Exception e) {
+
       if (e instanceof EntityNotFoundException) {
         httpResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
         errorResponse = getErrorResponse(404, "Сущность не найдена", e.getMessage());
+        writeErrorResponse(httpResponse, errorResponse);
+      } else if (e instanceof WrongParamException) {
+        httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        errorResponse = getErrorResponse(400, "Проверьте поля формы на корректность", e.getMessage());
         writeErrorResponse(httpResponse, errorResponse);
       } else if (e instanceof EntityAlreadyExistsException) {
         httpResponse.setStatus(HttpServletResponse.SC_CONFLICT);
