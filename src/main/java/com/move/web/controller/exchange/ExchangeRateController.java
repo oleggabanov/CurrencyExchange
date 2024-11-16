@@ -5,7 +5,7 @@ import com.move.context.AppContext;
 import com.move.dto.ExchangeRateDto;
 import com.move.exception.ParamAbsenceException;
 import com.move.model.ExchangeRate;
-import com.move.service.exchange.ExchangeRatesService;
+import com.move.service.exchange.ExchangeRateService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,13 +13,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Map;
 
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateController extends HttpServlet {
 
   private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private ExchangeRatesService exchangeRatesService = new ExchangeRatesService();
+  private ExchangeRateService exchangeRateService = new ExchangeRateService();
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -32,7 +31,7 @@ public class ExchangeRateController extends HttpServlet {
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
 
-    ExchangeRate exchangeRate = exchangeRatesService.getExchangeRateByCurrencyCodes(
+    ExchangeRate exchangeRate = exchangeRateService.getExchangeRateByCurrencyCodes(
             ExchangeRateDto.builder()
                     .baseCurrencyCode(baseCurrencyCode)
                     .targetCurrencyCode(targetCurrencyCode)
@@ -46,18 +45,21 @@ public class ExchangeRateController extends HttpServlet {
 
   @Override
   protected void doPatch(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String stringRate = request.getReader()
+            .lines()
+            .reduce("", (a, b) -> a + b);
     String requestURI = request.getRequestURI();
-    String exchangeRateCodes = requestURI.split("/")[2];
+    String[] uri = requestURI.split("/");
+    String exchangeRateCodes = uri[uri.length - 1];
     String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
     String targetCurrencyCode = exchangeRateCodes.substring(3);
-    Map<String, String[]> requestParams = request.getParameterMap();
 
-    if (requestParams.size() != 1) {
+    if (stringRate.isEmpty()) {
       throw new ParamAbsenceException("Отсутствует нужное поле формы");
     }
 
-    BigDecimal rate = new BigDecimal(requestParams.get("rate")[0]);
-    ExchangeRate exchangeRate = exchangeRatesService.updateExchangeRate(
+    BigDecimal rate = new BigDecimal(stringRate.split("=")[1]);
+    ExchangeRate exchangeRate = exchangeRateService.updateExchangeRate(
             ExchangeRateDto.builder()
                     .baseCurrencyCode(baseCurrencyCode)
                     .targetCurrencyCode(targetCurrencyCode)
@@ -71,11 +73,12 @@ public class ExchangeRateController extends HttpServlet {
   @Override
   protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
     String requestURI = request.getRequestURI();
-    String exchangeRateCodes = requestURI.split("/")[2];
+    String[] uri = requestURI.split("/");
+    String exchangeRateCodes = uri[uri.length - 1];
     String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
-    exchangeRatesService.deleteExchangeRate(
+    exchangeRateService.deleteExchangeRate(
             ExchangeRateDto.builder()
                     .baseCurrencyCode(baseCurrencyCode)
                     .targetCurrencyCode(targetCurrencyCode)
