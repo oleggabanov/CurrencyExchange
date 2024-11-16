@@ -5,7 +5,7 @@ import com.move.context.AppContext;
 import com.move.dto.ExchangeRateDto;
 import com.move.exception.ParamAbsenceException;
 import com.move.model.ExchangeRate;
-import com.move.service.exchange.ExchangeRatesService;
+import com.move.service.exchange.ExchangeRateService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,14 +19,14 @@ import java.util.Map;
 public class ExchangeRatesController extends HttpServlet {
 
   private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private ExchangeRatesService exchangeRatesService = new ExchangeRatesService();
+  private ExchangeRateService exchangeRateService = new ExchangeRateService();
 
   @Override
   @SneakyThrows
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     response.setStatus(HttpServletResponse.SC_OK);
     objectMapper.writerWithDefaultPrettyPrinter()
-            .writeValue(response.getWriter(), exchangeRatesService.getAllExchangeRates());
+            .writeValue(response.getWriter(), exchangeRateService.getAllExchangeRates());
   }
 
   @Override
@@ -38,12 +38,12 @@ public class ExchangeRatesController extends HttpServlet {
       throw new ParamAbsenceException("Отсутствует нужное поле формы");
     }
 
-    String baseCurrencyCode = request.getParameter("baseCurrencyCode");
-    String targetCurrencyCode = request.getParameter("targetCurrencyCode");
-    BigDecimal rate = new BigDecimal(request.getParameter("rate"));
+    String baseCurrencyCode = requestParams.get("baseCurrencyCode")[0];
+    String targetCurrencyCode = requestParams.get("targetCurrencyCode")[0];
+    BigDecimal rate = new BigDecimal(requestParams.get("rate")[0]);
 
 
-    ExchangeRate exchangeRate = exchangeRatesService.addExchangeRate(
+    ExchangeRate exchangeRate = exchangeRateService.addExchangeRate(
             ExchangeRateDto.builder()
                     .baseCurrencyCode(baseCurrencyCode)
                     .targetCurrencyCode(targetCurrencyCode)
