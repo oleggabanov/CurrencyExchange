@@ -3,14 +3,11 @@ package com.move.dao.impl;
 import com.move.dao.CurrencyDao;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
-import org.sqlite.SQLiteException;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import static org.sqlite.SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE;
 
 public class CurrencyDaoJDBC implements CurrencyDao {
 
@@ -59,7 +56,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       String sign = currency.getSign();
 
       if (findByCode(currencyCode).isPresent()) {
-        throw new EntityAlreadyExistsException("Currency already exists, Да да, это там где ты чекал на exist");
+        throw new EntityAlreadyExistsException("В базе данных уже есть валюта с кодом %s".formatted(currencyCode));
       }
       PreparedStatement preparedStatement = connection
               .prepareStatement("insert into currencies (code, full_name, sign) values (?,?,?);");
