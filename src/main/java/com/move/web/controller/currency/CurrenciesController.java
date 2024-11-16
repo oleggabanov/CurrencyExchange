@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.move.context.AppContext;
 import com.move.dto.CurrencyDto;
 import com.move.exception.ParamAbsenceException;
-import com.move.service.currency.CurrenciesService;
+import com.move.service.currency.CurrencyService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,14 +18,14 @@ import java.util.Map;
 public class CurrenciesController extends HttpServlet {
 
   private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private CurrenciesService currenciesService = new CurrenciesService();
+  private CurrencyService currencyService = new CurrencyService();
 
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     response.setStatus(HttpServletResponse.SC_OK);
     objectMapper.writerWithDefaultPrettyPrinter()
-              .writeValue(response.getWriter(), currenciesService.getCurrencies());
+              .writeValue(response.getWriter(), currencyService.getCurrencies());
   }
 
   @Override
@@ -38,13 +38,13 @@ public class CurrenciesController extends HttpServlet {
 
     CurrencyDto currencyDto = CurrencyDto.builder()
             .code(requestParams.get("code")[0])
-            .fullName(requestParams.get("full_name")[0])
+            .fullName(requestParams.get("name")[0])
             .sign(requestParams.get("sign")[0])
             .build();
 
     response.setStatus(HttpServletResponse.SC_CREATED);
     objectMapper.writerWithDefaultPrettyPrinter()
-              .writeValue(response.getWriter(), currenciesService.addCurrency(currencyDto));
+              .writeValue(response.getWriter(), currencyService.addCurrency(currencyDto));
   }
 
 }
