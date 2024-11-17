@@ -15,8 +15,8 @@ import java.util.Optional;
 
 public class ExchangeRateService {
 
-  private CurrencyDao currencyDao;
-  private ExchangeRateDao exchangeRateDao;
+  private final CurrencyDao currencyDao;
+  private final ExchangeRateDao exchangeRateDao;
 
   public ExchangeRateService() {
     this.currencyDao = AppContext.getInstance().getCurrencyDao();
@@ -44,13 +44,12 @@ public class ExchangeRateService {
   }
 
   private ExchangeRate getExchangeRate(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
-    ExchangeRate exchangeRate = ExchangeRate.builder()
+    return ExchangeRate.builder()
             .id(id)
             .baseCurrency(baseCurrency)
             .targetCurrency(targetCurrency)
             .rate(rate)
             .build();
-    return exchangeRate;
   }
 
   private ExchangeRate getStraightOrReverseExchangeRate(Currency baseCurrency, Currency targetCurrency) {
@@ -144,7 +143,7 @@ public class ExchangeRateService {
                     exchangeRateDto.baseCurrencyCode(),
                     exchangeRateDto.targetCurrencyCode()).stream()
             .peek(exchangeRate -> exchangeRate.setRate(exchangeRateDto.rate()))
-            .map(exchangeRate -> exchangeRateDao.save(exchangeRate))
+            .map(exchangeRateDao::save)
             .findFirst()
             .orElseThrow(() -> new EntityNotFoundException("Валютная пара отсутствует в базе данных"));
   }

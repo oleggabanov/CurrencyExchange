@@ -6,14 +6,13 @@ import com.move.dto.CurrencyDto;
 import com.move.exception.EntityNotFoundException;
 import com.move.mapper.CustomMapper;
 import com.move.model.Currency;
-import lombok.SneakyThrows;
 
 import java.util.List;
 
 public class CurrencyService {
 
-  private CurrencyDao currencyDao;
-  private CustomMapper<Currency, CurrencyDto> customMapper;
+  private final CurrencyDao currencyDao;
+  private final CustomMapper<Currency, CurrencyDto> customMapper;
 
   public CurrencyService() {
     this.currencyDao = AppContext.getInstance().getCurrencyDao();
@@ -29,9 +28,9 @@ public class CurrencyService {
             .orElseThrow(() -> new EntityNotFoundException("Валюта не найдена, проверьте корректность вводимых данных и повторите попытку"));
   }
 
-  @SneakyThrows
   public Currency addCurrency(CurrencyDto currencyDto) {
     Currency currency = customMapper.map(currencyDto);
     return currencyDao.save(currency);
   }
+
 }

@@ -18,8 +18,8 @@ import java.math.BigDecimal;
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateController extends HttpServlet {
 
-  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private ExchangeRateService exchangeRateService = new ExchangeRateService();
+  private final ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
+  private final ExchangeRateService exchangeRateService = AppContext.getInstance().getExchangeRateService();
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -33,8 +33,8 @@ public class ExchangeRateController extends HttpServlet {
 
     ExchangeRate exchangeRate = exchangeRateService.getExchangeRateByCurrencyCodes(
             ExchangeRateDto.builder()
-                    .baseCurrencyCode(baseCurrencyCode)
-                    .targetCurrencyCode(targetCurrencyCode)
+                    .baseCurrencyCode(baseCurrencyCode.toUpperCase())
+                    .targetCurrencyCode(targetCurrencyCode.toUpperCase())
                     .build()
     );
 
@@ -60,14 +60,14 @@ public class ExchangeRateController extends HttpServlet {
     String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
-    if (!isLengthOfCodesFit || rate.compareTo(BigDecimal.ZERO) < 0 || baseCurrencyCode.equals(targetCurrencyCode)) {
+    if (!isLengthOfCodesFit || rate.compareTo(BigDecimal.ZERO) < 1 || baseCurrencyCode.equals(targetCurrencyCode)) {
       throw new WrongParamException("Каждый код валюты должен состоять из 3 символов и не повторять другой. Курс валютной пары должен быть положительным числом");
     }
 
     ExchangeRate exchangeRate = exchangeRateService.updateExchangeRate(
             ExchangeRateDto.builder()
-                    .baseCurrencyCode(baseCurrencyCode)
-                    .targetCurrencyCode(targetCurrencyCode)
+                    .baseCurrencyCode(baseCurrencyCode.toUpperCase())
+                    .targetCurrencyCode(targetCurrencyCode.toUpperCase())
                     .rate(rate)
                     .build()
     );
@@ -90,8 +90,8 @@ public class ExchangeRateController extends HttpServlet {
 
     exchangeRateService.deleteExchangeRate(
             ExchangeRateDto.builder()
-                    .baseCurrencyCode(baseCurrencyCode)
-                    .targetCurrencyCode(targetCurrencyCode)
+                    .baseCurrencyCode(baseCurrencyCode.toUpperCase())
+                    .targetCurrencyCode(targetCurrencyCode.toUpperCase())
                     .build()
     );
   }

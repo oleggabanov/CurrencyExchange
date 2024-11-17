@@ -1,6 +1,7 @@
 package com.move.web.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.move.context.AppContext;
 import com.move.dto.ErrorResponse;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.exception.EntityNotFoundException;
@@ -15,12 +16,12 @@ import java.io.IOException;
 @WebFilter(filterName = "ExceptionHandler", value = "/*")
 public class CustomExceptionHandlerFilter implements Filter {
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
 
   @Override
   public void doFilter(ServletRequest servletRequest,
                        ServletResponse servletResponse,
-                       FilterChain filterChain) throws IOException, ServletException {
+                       FilterChain filterChain) throws IOException {
     HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
     httpResponse.setContentType("application/json; charset=utf-8");
     ErrorResponse errorResponse;
@@ -59,11 +60,10 @@ public class CustomExceptionHandlerFilter implements Filter {
   }
 
   private static ErrorResponse getErrorResponse(int status, String message, String details) {
-    ErrorResponse errorResponse = ErrorResponse.builder()
+    return ErrorResponse.builder()
             .status(status)
             .message(message)
             .details(details)
             .build();
-    return errorResponse;
   }
 }

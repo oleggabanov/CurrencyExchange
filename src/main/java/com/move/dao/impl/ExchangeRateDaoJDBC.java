@@ -12,8 +12,6 @@ import java.util.Optional;
 
 public class ExchangeRateDaoJDBC implements ExchangeRateDao {
 
-  private Connection connection;
-
   private static final String SQL_QUERY = """
            SELECT er.id        AS exchange_rate_id,
                    cb.id        AS base_currency_id,
@@ -31,6 +29,9 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
                      JOIN
                  currencies ct ON er.target_currency_id = ct.id
           """;
+
+  private final Connection connection;
+
 
   public ExchangeRateDaoJDBC(Connection connection) {
     this.connection = connection;
@@ -60,14 +61,14 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
     Currency baseCurrency = Currency.builder()
             .id(resultSet.getInt("base_currency_id"))
             .code(resultSet.getString("base_currency_code"))
-            .fullName(resultSet.getString("base_currency_name"))
+            .name(resultSet.getString("base_currency_name"))
             .sign(resultSet.getString("base_currency_sign"))
             .build();
 
     Currency targetCurrency = Currency.builder()
             .id(resultSet.getInt("target_currency_id"))
             .code(resultSet.getString("target_currency_code"))
-            .fullName(resultSet.getString("target_currency_name"))
+            .name(resultSet.getString("target_currency_name"))
             .sign(resultSet.getString("target_currency_sign"))
             .build();
 
@@ -140,7 +141,7 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
       connection.commit();
 
       return findByCurrencyIds(baseCurrencyId, targetCurrencyId)
-              .orElseThrow(() -> new EntityAlreadyExistsException("Данная валютная пара уже существует в базе данных, Твое любимое чудо"));
+              .orElseThrow(() -> new EntityAlreadyExistsException("Данная валютная пара уже существует в базе данных"));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

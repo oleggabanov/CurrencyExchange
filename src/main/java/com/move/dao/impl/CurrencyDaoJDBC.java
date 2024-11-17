@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public class CurrencyDaoJDBC implements CurrencyDao {
 
-  private Connection connection;
+  private final Connection connection;
 
   public CurrencyDaoJDBC(Connection connection) {
     this.connection = connection;
@@ -52,12 +52,13 @@ public class CurrencyDaoJDBC implements CurrencyDao {
 
     try {
       String currencyCode = currency.getCode();
-      String fullName = currency.getFullName();
+      String fullName = currency.getName();
       String sign = currency.getSign();
 
       if (findByCode(currencyCode).isPresent()) {
         throw new EntityAlreadyExistsException("В базе данных уже есть валюта с кодом %s".formatted(currencyCode));
       }
+
       PreparedStatement preparedStatement = connection
               .prepareStatement("insert into currencies (code, full_name, sign) values (?,?,?);");
       preparedStatement.setString(1, currencyCode);
@@ -93,7 +94,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
     return Currency.builder()
             .id(resultSet.getInt("id"))
             .code(resultSet.getString("code"))
-            .fullName(resultSet.getString("full_name"))
+            .name(resultSet.getString("full_name"))
             .sign(resultSet.getString("sign"))
             .build();
   }

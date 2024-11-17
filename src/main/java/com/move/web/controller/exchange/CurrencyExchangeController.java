@@ -17,20 +17,21 @@ import java.math.BigDecimal;
 @WebServlet("/exchange")
 public class CurrencyExchangeController extends HttpServlet {
 
-  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private CurrencyExchangeService currencyExchangeService = new CurrencyExchangeService();
+  private final ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
+  private final CurrencyExchangeService currencyExchangeService = AppContext.getInstance().getCurrencyExchangeService();
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String baseCurrencyCode = req.getParameter("from");
     String targetCurrencyCode = req.getParameter("to");
     BigDecimal amount = new BigDecimal(req.getParameter("amount"));
-    if (baseCurrencyCode.length() != 3 || targetCurrencyCode.length() != 3 || amount.compareTo(BigDecimal.ZERO) < 0 || baseCurrencyCode.equals(targetCurrencyCode)) {
+    if (baseCurrencyCode.length() != 3 || targetCurrencyCode.length() != 3 ||
+            amount.compareTo(BigDecimal.ZERO) < 0 || baseCurrencyCode.equals(targetCurrencyCode)) {
       throw new WrongParamException("Каждый код валюты должен состоять из 3 символов и не повторять другой. Сумма должна быть положительным числом");
     }
     CurrencyExchangeDto currencyExchangeDto = CurrencyExchangeDto.builder()
-            .baseCurrencyCode(baseCurrencyCode)
-            .targetCurrencyCode(targetCurrencyCode)
+            .baseCurrencyCode(baseCurrencyCode.toUpperCase())
+            .targetCurrencyCode(targetCurrencyCode.toUpperCase())
             .amount(amount)
             .build();
     CurrencyExchange currencyExchange = currencyExchangeService.convertCurrency(currencyExchangeDto);

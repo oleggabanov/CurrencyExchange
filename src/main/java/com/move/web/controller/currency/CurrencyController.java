@@ -15,8 +15,8 @@ import java.io.IOException;
 @WebServlet("/currency/*")
 public class CurrencyController extends HttpServlet {
 
-  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private CurrencyService currencyService = new CurrencyService();
+  private final ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
+  private final CurrencyService currencyService = AppContext.getInstance().getCurrencyService();
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -32,7 +32,7 @@ public class CurrencyController extends HttpServlet {
 
     response.setStatus(HttpServletResponse.SC_OK);
     objectMapper.writerWithDefaultPrettyPrinter()
-            .writeValue(response.getWriter(), currencyService.getCurrencyByCode(code));
+            .writeValue(response.getWriter(), currencyService.getCurrencyByCode(code.toUpperCase()));
   }
 
 }
