@@ -18,8 +18,8 @@ import java.util.Map;
 @WebServlet("/currencies")
 public class CurrenciesController extends HttpServlet {
 
-  private ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
-  private CurrencyService currencyService = new CurrencyService();
+  private final ObjectMapper objectMapper = AppContext.getInstance().getObjectMapper();
+  private final CurrencyService currencyService = AppContext.getInstance().getCurrencyService();
 
 
   @Override
@@ -40,19 +40,37 @@ public class CurrenciesController extends HttpServlet {
       throw new ParamAbsenceException("Отсутствует нужное поле формы");
     }
 
-    if (code.length() != 3 || name.length() > 30 || sign.length() != 1){
+    boolean isCodeFit = code.chars()
+            .filter(codePoint ->
+                    Character.isDigit(codePoint) || Character.isLowerCase(codePoint)
+            )
+            .findAny()
+            .isEmpty();
+    boolean isNameAlphabetic = isParamAlphabetic(name);
+    boolean isSignAlphabetic = isParamAlphabetic(sign);
+    if (code.length() != 3 ||
+            name.length() > 30 ||
+            sign.length() != 1 ||
+            !isCodeFit ||
+            !isNameAlphabetic ||
+            !isSignAlphabetic
+    ) {
       throw new WrongParamException("Код валюты должен состоять из 3 символов. Имя валюты содержит не больше 30 символов, а знак валюты не больше 1 символа ");
     }
 
     CurrencyDto currencyDto = CurrencyDto.builder()
-            .code(code)
-            .fullName(name)
+            .code(code.toUpperCase())
+            .name(name)
             .sign(sign)
             .build();
 
     response.setStatus(HttpServletResponse.SC_CREATED);
     objectMapper.writerWithDefaultPrettyPrinter()
             .writeValue(response.getWriter(), currencyService.addCurrency(currencyDto));
+  }
+
+  private static boolean isParamAlphabetic(String param) {
+    return param.chars().allMatch(Character::isAlphabetic);
   }
 
 }
