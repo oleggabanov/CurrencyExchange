@@ -1,15 +1,18 @@
 package com.move.dao.impl;
 
+import com.move.dao.AbstractDao;
 import com.move.dao.CurrencyDao;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-public class CurrencyDaoJDBC implements CurrencyDao {
+public class CurrencyDaoJDBC extends AbstractDao<Currency> implements CurrencyDao {
 
   private final Connection connection;
 
@@ -18,32 +21,28 @@ public class CurrencyDaoJDBC implements CurrencyDao {
   }
 
   public List<Currency> findAll() {
-    try {
-      List<Currency> currencies = new ArrayList<>();
-      PreparedStatement preparedStatement = connection.prepareStatement("select * from currencies;");
-      ResultSet resultSet = preparedStatement.executeQuery();
-      while (resultSet.next()) {
-        Currency currency = buildCurrency(resultSet);
-        currencies.add(currency);
-      }
-      return currencies;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    String findAllCurrenciesQuery = "select * from currencies;";
+    return executeQuery(
+            findAllCurrenciesQuery,
+            null,
+            this::buildCurrency
+    );
   }
 
 
   @Override
   public Optional<Currency> findByCode(String currencyCode) {
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement("select * from currencies where code = (?);");
-      preparedStatement.setString(1, currencyCode);
-      ResultSet resultSet = preparedStatement.executeQuery();
+    String findCurrencyByCodeQuery = "select * from currencies where code = (?);";
+    List<Currency> currencyList = executeQuery(
+            findCurrencyByCodeQuery,
+            preparedStatement ->
+                    preparedStatement.setString(1, currencyCode),
+            this::buildCurrency
+    );
 
-      return resultSet.next() ? Optional.ofNullable(buildCurrency(resultSet)) : Optional.empty();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    return currencyList.isEmpty() ?
+            Optional.empty() :
+            Optional.of(currencyList.get(0));
   }
 
   @Override
@@ -56,6 +55,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
       if (findByCode(currencyCode).isPresent()) {
         throw new EntityAlreadyExistsException("В базе данных уже есть валюта с кодом %s".formatted(currencyCode));
       }
+
 
       PreparedStatement preparedStatement = connection
               .prepareStatement("insert into currencies (code, full_name, sign) values (?,?,?);");
@@ -73,14 +73,15 @@ public class CurrencyDaoJDBC implements CurrencyDao {
 
   @Override
   public Optional<Currency> findById(Integer currencyId) {
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement("select * from currencies where id = (?);");
-      preparedStatement.setInt(1, currencyId);
-      ResultSet resultSet = preparedStatement.executeQuery();
-      return Optional.ofNullable(buildCurrency(resultSet));
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    String findByIdQuery = "select * from currencies where id = (?);";
+    List<Currency> currencyList = executeQuery(
+            findByIdQuery,
+            preparedStatement -> preparedStatement.setInt(1, currencyId),
+            this::buildCurrency
+    );
+    return currencyList.isEmpty() ?
+            Optional.empty() :
+            Optional.of(currencyList.get(0));
   }
 
   @Override
@@ -88,7 +89,7 @@ public class CurrencyDaoJDBC implements CurrencyDao {
     throw new UnsupportedOperationException("Not supported yet");
   }
 
-  private static Currency buildCurrency(ResultSet resultSet) throws SQLException {
+  private Currency buildCurrency(ResultSet resultSet) throws SQLException {
     return Currency.builder()
             .id(resultSet.getInt("id"))
             .code(resultSet.getString("code"))
