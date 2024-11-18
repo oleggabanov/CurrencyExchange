@@ -18,10 +18,8 @@ public class CurrencyExchangeService {
 
   public CurrencyExchange convertCurrency(CurrencyExchangeDto currencyExchangeDto) {
     ExchangeRate exchangeRate = exchangeRateService.getExchangeRateByCurrencyCodes(
-            ExchangeRateDto.builder()
-                    .baseCurrencyCode(currencyExchangeDto.baseCurrencyCode())
-                    .targetCurrencyCode(currencyExchangeDto.targetCurrencyCode())
-                    .build()
+            currencyExchangeDto.baseCurrencyCode(),
+            currencyExchangeDto.targetCurrencyCode()
     );
     BigDecimal amount = currencyExchangeDto.amount();
     BigDecimal rate = exchangeRate.getRate();

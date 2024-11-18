@@ -31,12 +31,11 @@ public class ExchangeRateController extends HttpServlet {
     String baseCurrencyCode = exchangeRateCodes.substring(0, 3);
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
-    ExchangeRate exchangeRate = exchangeRateService.getExchangeRateByCurrencyCodes(
-            ExchangeRateDto.builder()
-                    .baseCurrencyCode(baseCurrencyCode.toUpperCase())
-                    .targetCurrencyCode(targetCurrencyCode.toUpperCase())
-                    .build()
-    );
+    ExchangeRate exchangeRate = exchangeRateService
+            .getExchangeRateByCurrencyCodes(
+                    baseCurrencyCode.toUpperCase(),
+                    targetCurrencyCode.toUpperCase()
+            );
 
     response.setStatus(HttpServletResponse.SC_OK);
     objectMapper.writerWithDefaultPrettyPrinter()
@@ -89,10 +88,8 @@ public class ExchangeRateController extends HttpServlet {
     String targetCurrencyCode = exchangeRateCodes.substring(3);
 
     exchangeRateService.deleteExchangeRate(
-            ExchangeRateDto.builder()
-                    .baseCurrencyCode(baseCurrencyCode.toUpperCase())
-                    .targetCurrencyCode(targetCurrencyCode.toUpperCase())
-                    .build()
+            baseCurrencyCode.toUpperCase(),
+            targetCurrencyCode.toUpperCase()
     );
   }
 }
