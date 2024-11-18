@@ -19,10 +19,9 @@ public class CurrencyDaoJDBC implements CurrencyDao {
 
   public List<Currency> findAll() {
     try {
-      String sqlQuery = "select * from currencies;";
       List<Currency> currencies = new ArrayList<>();
-      Statement statement = connection.createStatement();
-      ResultSet resultSet = statement.executeQuery(sqlQuery);
+      PreparedStatement preparedStatement = connection.prepareStatement("select * from currencies;");
+      ResultSet resultSet = preparedStatement.executeQuery();
       while (resultSet.next()) {
         Currency currency = buildCurrency(resultSet);
         currencies.add(currency);
@@ -49,7 +48,6 @@ public class CurrencyDaoJDBC implements CurrencyDao {
 
   @Override
   public Currency save(Currency currency) {
-
     try {
       String currencyCode = currency.getCode();
       String fullName = currency.getName();
