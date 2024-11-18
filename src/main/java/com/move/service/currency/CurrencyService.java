@@ -25,7 +25,9 @@ public class CurrencyService {
 
   public Currency getCurrencyByCode(String currencyCode) {
     return currencyDao.findByCode(currencyCode)
-            .orElseThrow(() -> new EntityNotFoundException("Валюта не найдена, проверьте корректность вводимых данных и повторите попытку"));
+            .orElseThrow(() -> new EntityNotFoundException("""
+                    Валюта не найдена, проверьте корректность вводимых данных и повторите попытку
+                    """));
   }
 
   public Currency addCurrency(CurrencyDto currencyDto) {

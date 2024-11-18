@@ -45,7 +45,10 @@ public class ExchangeRatesController extends HttpServlet {
 
     if (baseCurrencyCode.length() != 3 || targetCurrencyCode.length() != 3 ||
             rate.compareTo(BigDecimal.ZERO) < 1 || baseCurrencyCode.equals(targetCurrencyCode)) {
-      throw new WrongParamException("Каждый код валюты должен состоять из 3 символов и не повторять другой. Курс валютной пары должен быть положительным числом");
+      throw new WrongParamException("""
+              Каждый код валюты должен состоять из 3 символов и не повторять другой.
+              Курс валютной пары должен быть положительным числом.
+              """);
     }
 
     ExchangeRate exchangeRate = exchangeRateService.addExchangeRate(

@@ -42,18 +42,16 @@ public class CurrenciesController extends HttpServlet {
 
     boolean isCodeFit = code.chars()
             .filter(codePoint ->
-                    Character.isDigit(codePoint) || Character.isLowerCase(codePoint)
-            )
+                    Character.isDigit(codePoint) ||
+                            Character.isLowerCase(codePoint))
             .findAny()
             .isEmpty();
     boolean isNameAlphabetic = isParamAlphabetic(name);
-    boolean isSignAlphabetic = isParamAlphabetic(sign);
     if (code.length() != 3 ||
             name.length() > 30 ||
             sign.length() != 1 ||
             !isCodeFit ||
-            !isNameAlphabetic ||
-            !isSignAlphabetic
+            !isNameAlphabetic
     ) {
       throw new WrongParamException("Код валюты должен состоять из 3 символов. Имя валюты содержит не больше 30 символов, а знак валюты не больше 1 символа ");
     }

@@ -28,37 +28,32 @@ public class ExchangeRateService {
   }
 
 
-  public ExchangeRate getExchangeRateByCurrencyCodes(ExchangeRateDto exchangeRateDto) {
-    Currency baseCurrency = currencyDao.findByCode(exchangeRateDto.baseCurrencyCode())
+  public ExchangeRate getExchangeRateByCurrencyCodes(
+          String baseCurrencyCode,
+          String targetCurrencyCode
+  ) {
+    Currency baseCurrency = currencyDao.findByCode(baseCurrencyCode)
             .orElseThrow();
-    Currency targetCurrency = currencyDao.findByCode(exchangeRateDto.targetCurrencyCode())
+    Currency targetCurrency = currencyDao.findByCode(targetCurrencyCode)
             .orElseThrow();
-    ExchangeRate exchangeRate;
+    ExchangeRate exchangeRate = findStraightOrReverseExchangeRate(baseCurrency, targetCurrency);
 
-    exchangeRate = getStraightOrReverseExchangeRate(baseCurrency, targetCurrency);
     if (exchangeRate == null) {
-      exchangeRate = getCrossExchangeRate(baseCurrency, targetCurrency);
+      exchangeRate = findCrossExchangeRate(baseCurrency, targetCurrency);
     }
 
     return exchangeRate;
   }
 
-  private ExchangeRate getExchangeRate(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
-    return ExchangeRate.builder()
-            .id(id)
-            .baseCurrency(baseCurrency)
-            .targetCurrency(targetCurrency)
-            .rate(rate)
-            .build();
-  }
-
-  private ExchangeRate getStraightOrReverseExchangeRate(Currency baseCurrency, Currency targetCurrency) {
+  private ExchangeRate findStraightOrReverseExchangeRate(
+          Currency baseCurrency,
+          Currency targetCurrency) {
     Optional<ExchangeRate> findByCurrencyIds = exchangeRateDao.findByCurrencyIds(baseCurrency.getId(), targetCurrency.getId());
     BigDecimal rate;
     if (findByCurrencyIds.isPresent()) {
       int id = findByCurrencyIds.get().getId();
       rate = findByCurrencyIds.get().getRate();
-      return getExchangeRate(id, baseCurrency, targetCurrency, rate);
+      return buildExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
 
     findByCurrencyIds = exchangeRateDao.findByCurrencyIds(targetCurrency.getId(), baseCurrency.getId());
@@ -75,7 +70,7 @@ public class ExchangeRateService {
     return null;
   }
 
-  private ExchangeRate getCrossExchangeRate(Currency baseCurrency, Currency targetCurrency) {
+  private ExchangeRate findCrossExchangeRate(Currency baseCurrency, Currency targetCurrency) {
     ExchangeRate exchangeRate1 = null;
     ExchangeRate exchangeRate2 = null;
     BigDecimal rate;
@@ -86,14 +81,14 @@ public class ExchangeRateService {
       currency2 = eRate.getTargetCurrency();
 
       if (baseCurrency.getCode().equals(currency1.getCode())) {
-        exchangeRate1 = getStraightOrReverseExchangeRate(baseCurrency, currency2);
-        exchangeRate2 = getStraightOrReverseExchangeRate(currency2, targetCurrency);
+        exchangeRate1 = findStraightOrReverseExchangeRate(baseCurrency, currency2);
+        exchangeRate2 = findStraightOrReverseExchangeRate(currency2, targetCurrency);
         break;
       }
 
       if (baseCurrency.getCode().equals(currency2.getCode())) {
-        exchangeRate1 = getStraightOrReverseExchangeRate(baseCurrency, currency1);
-        exchangeRate2 = getStraightOrReverseExchangeRate(currency1, targetCurrency);
+        exchangeRate1 = findStraightOrReverseExchangeRate(baseCurrency, currency1);
+        exchangeRate2 = findStraightOrReverseExchangeRate(currency1, targetCurrency);
         break;
       }
 
@@ -113,7 +108,7 @@ public class ExchangeRateService {
                     .build()
     );
 
-    return exchangeRate1;
+    return exchangeRateDao.save(exchangeRate1);
   }
 
 
@@ -148,7 +143,21 @@ public class ExchangeRateService {
             .orElseThrow(() -> new EntityNotFoundException("Валютная пара отсутствует в базе данных"));
   }
 
-  public void deleteExchangeRate(ExchangeRateDto exchangeRateDto) {
-    exchangeRateDao.delete(getExchangeRateByCurrencyCodes(exchangeRateDto));
+  public void deleteExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
+    exchangeRateDao.delete(getExchangeRateByCurrencyCodes(baseCurrencyCode, targetCurrencyCode));
+  }
+
+  private ExchangeRate buildExchangeRate(
+          int id,
+          Currency baseCurrency,
+          Currency targetCurrency,
+          BigDecimal rate
+  ) {
+    return ExchangeRate.builder()
+            .id(id)
+            .baseCurrency(baseCurrency)
+            .targetCurrency(targetCurrency)
+            .rate(rate)
+            .build();
   }
 }
