@@ -17,14 +17,16 @@ public abstract class AbstractDao<T> {
     this.connection = AppContext.getInstance().getConnection();
   }
 
-  protected List<T> executeQuery(String sqlQuery,
-                                 PreparedStatementSetter preparedStatementSetter,
-                                 ResultSetMapper<T> mapper) {
+  protected List<T> executeQuery(
+          String sqlQuery,
+          PreparedStatementSetter preparedStatementSetter,
+          ResultSetMapper<T> mapper
+  ) {
     try (final PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
       if (preparedStatementSetter != null) {
         preparedStatementSetter.setParam(preparedStatement);
       }
-      try(final ResultSet resultSet = preparedStatement.executeQuery()){
+      try (final ResultSet resultSet = preparedStatement.executeQuery()) {
         List<T> list = new ArrayList<>();
         while (resultSet.next()) {
           T entity = mapper.buildEntity(resultSet);
@@ -32,6 +34,21 @@ public abstract class AbstractDao<T> {
         }
         return list;
       }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  protected void executeUpdate(
+          String sqlQuery,
+          PreparedStatementSetter setter
+  ) {
+    try (final PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+      if (setter != null) {
+        setter.setParam(preparedStatement);
+      }
+      preparedStatement.executeUpdate();
+      connection.commit();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
