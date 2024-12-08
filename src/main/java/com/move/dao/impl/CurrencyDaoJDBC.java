@@ -6,7 +6,6 @@ import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -29,7 +28,6 @@ public class CurrencyDaoJDBC extends AbstractDao<Currency> implements CurrencyDa
     );
   }
 
-
   @Override
   public Optional<Currency> findByCode(String currencyCode) {
     String findCurrencyByCodeQuery = "select * from currencies where code = (?);";
@@ -47,28 +45,26 @@ public class CurrencyDaoJDBC extends AbstractDao<Currency> implements CurrencyDa
 
   @Override
   public Currency save(Currency currency) {
-    try {
-      String currencyCode = currency.getCode();
-      String fullName = currency.getName();
-      String sign = currency.getSign();
+    String currencyCode = currency.getCode();
+    String fullName = currency.getName();
+    String sign = currency.getSign();
 
-      if (findByCode(currencyCode).isPresent()) {
-        throw new EntityAlreadyExistsException("В базе данных уже есть валюта с кодом %s".formatted(currencyCode));
-      }
-
-
-      PreparedStatement preparedStatement = connection
-              .prepareStatement("insert into currencies (code, full_name, sign) values (?,?,?);");
-      preparedStatement.setString(1, currencyCode);
-      preparedStatement.setString(2, fullName);
-      preparedStatement.setString(3, sign);
-      preparedStatement.executeUpdate();
-      connection.commit();
-      return findByCode(currencyCode)
-              .orElseThrow(RuntimeException::new);
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    if (findByCode(currencyCode).isPresent()) {
+      throw new EntityAlreadyExistsException("В базе данных уже есть валюта с кодом %s".formatted(currencyCode));
     }
+
+    String saveCurrencyQuery = "insert into currencies (code, full_name, sign) values (?,?,?);";
+    executeUpdate(
+            saveCurrencyQuery,
+            preparedStatement -> {
+              preparedStatement.setString(1, currencyCode);
+              preparedStatement.setString(2, fullName);
+              preparedStatement.setString(3, sign);
+            }
+    );
+
+    return findByCode(currencyCode)
+            .orElseThrow(RuntimeException::new);
   }
 
   @Override
@@ -97,4 +93,5 @@ public class CurrencyDaoJDBC extends AbstractDao<Currency> implements CurrencyDa
             .sign(resultSet.getString("sign"))
             .build();
   }
+
 }

@@ -1,16 +1,18 @@
 package com.move.dao.impl;
 
+import com.move.dao.AbstractDao;
 import com.move.dao.ExchangeRateDao;
 import com.move.exception.EntityAlreadyExistsException;
 import com.move.model.Currency;
 import com.move.model.ExchangeRate;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeRateDaoJDBC implements ExchangeRateDao {
+public class ExchangeRateDaoJDBC extends AbstractDao<ExchangeRate> implements ExchangeRateDao {
 
   private static final String SQL_QUERY = """
            SELECT er.id        AS exchange_rate_id,
@@ -32,28 +34,98 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
 
   private final Connection connection;
 
-
   public ExchangeRateDaoJDBC(Connection connection) {
     this.connection = connection;
   }
 
   @Override
   public List<ExchangeRate> findAll() {
-    String findAllExchangeRatesQuery = """
-            %s;
-            """;
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement(findAllExchangeRatesQuery.formatted(SQL_QUERY));
-      ResultSet resultSet = preparedStatement.executeQuery();
-      List<ExchangeRate> exchangeRates = new ArrayList<>();
-      while (resultSet.next()) {
-        ExchangeRate exchangeRate = buildExchangeRate(resultSet);
-        exchangeRates.add(exchangeRate);
-      }
-      return exchangeRates;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    String findAllExchangeRatesQuery = "%s;".formatted(SQL_QUERY);
+    return executeQuery(
+            findAllExchangeRatesQuery,
+            null,
+            resultSet -> buildExchangeRate(resultSet)
+    );
+  }
+
+  public Optional<ExchangeRate> findByCurrencyIds(int baseCurrencyId, int targetCurrencyId) {
+    String findByCurrencyIdsQuery = """   
+            %s
+            where base_currency_id = (?) and target_currency_id = (?);
+            """.formatted(SQL_QUERY);
+
+    List<ExchangeRate> exchangeRates = executeQuery(
+            findByCurrencyIdsQuery,
+            preparedStatement -> {
+              preparedStatement.setInt(1, baseCurrencyId);
+              preparedStatement.setInt(2, targetCurrencyId);
+            },
+            this::buildExchangeRate
+    );
+
+    return exchangeRates.isEmpty() ?
+            Optional.empty() :
+            Optional.of(exchangeRates.get(0));
+  }
+
+  @Override
+  public Optional<ExchangeRate> findByCurrencyCodes(String baseCurrencyCode, String targetCurrencyCode) {
+    String findByCurrencyCodesQuery = """   
+            %s
+            where cb.code = (?) AND ct.code =(?);
+            """.formatted(SQL_QUERY);
+
+    List<ExchangeRate> exchangeRates = executeQuery(
+            findByCurrencyCodesQuery,
+            preparedStatement -> {
+              preparedStatement.setString(1, baseCurrencyCode);
+              preparedStatement.setString(2, targetCurrencyCode);
+            },
+            this::buildExchangeRate
+    );
+
+    return exchangeRates.isEmpty() ?
+            Optional.empty() :
+            Optional.of(exchangeRates.get(0));
+  }
+
+  @Override
+  public ExchangeRate save(ExchangeRate exchangeRate) {
+    Optional<ExchangeRate> findByIds = findByCurrencyIds(
+            exchangeRate.getBaseCurrency().getId(),
+            exchangeRate.getTargetCurrency().getId()
+    );
+
+    String sqlQuery = findByIds.isPresent()
+            ? "update exchange_rates set rate = (?) where base_currency_id = (?) and target_currency_id = (?);"
+            : "insert into exchange_rates (rate, base_currency_id, target_currency_id) values (?, ?, ?);";
+    int baseCurrencyId = exchangeRate.getBaseCurrency().getId();
+    int targetCurrencyId = exchangeRate.getTargetCurrency().getId();
+
+    executeUpdate(
+            sqlQuery,
+            preparedStatement -> {
+              preparedStatement.setBigDecimal(1, exchangeRate.getRate());
+              preparedStatement.setInt(2, baseCurrencyId);
+              preparedStatement.setInt(3, targetCurrencyId);
+            }
+    );
+
+    return findByCurrencyIds(baseCurrencyId, targetCurrencyId)
+            .orElseThrow(() ->
+                    new EntityAlreadyExistsException("Данная валютная пара уже существует в базе данных"));
+  }
+
+  @Override
+  public void delete(ExchangeRate exchangeRate) {
+    String deleteSqlQuery = "DELETE FROM exchange_rates WHERE id = (?);";
+    executeUpdate(deleteSqlQuery, preparedStatement ->
+            preparedStatement.setInt(1, exchangeRate.getId()));
+  }
+
+  @Override
+  public Optional<ExchangeRate> findById(Integer integer) {
+    throw new UnsupportedOperationException("Not supported yet");
   }
 
   private ExchangeRate buildExchangeRate(ResultSet resultSet) throws SQLException {
@@ -73,91 +145,4 @@ public class ExchangeRateDaoJDBC implements ExchangeRateDao {
             .sign(resultSet.getString("%s_currency_sign".formatted(prefix)))
             .build();
   }
-
-  public Optional<ExchangeRate> findByCurrencyIds(int baseCurrencyId, int targetCurrencyId) {
-    String sqlQuery = """   
-            %s
-            where base_currency_id = (?) and target_currency_id = (?);
-            """.formatted(SQL_QUERY);
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-      preparedStatement.setInt(1, baseCurrencyId);
-      preparedStatement.setInt(2, targetCurrencyId);
-      ResultSet resultSet = preparedStatement.executeQuery();
-      ExchangeRate exchangeRate = buildExchangeRate(resultSet);
-
-      return exchangeRate.getRate() != null ?
-              Optional.ofNullable(exchangeRate) :
-              Optional.empty();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public Optional<ExchangeRate> findByCurrencyCodes(String baseCurrencyCode, String targetCurrencyCode) {
-    String sqlQuery = """   
-            %s
-            where cb.code = (?) AND ct.code =(?);
-            """.formatted(SQL_QUERY);
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-      preparedStatement.setString(1, baseCurrencyCode);
-      preparedStatement.setString(2, targetCurrencyCode);
-      ResultSet resultSet = preparedStatement.executeQuery();
-      ExchangeRate exchangeRate = buildExchangeRate(resultSet);
-
-      return exchangeRate.getRate() != null ?
-              Optional.ofNullable(exchangeRate) :
-              Optional.empty();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public ExchangeRate save(ExchangeRate exchangeRate) {
-    Optional<ExchangeRate> findByIds = findByCurrencyIds(
-            exchangeRate.getBaseCurrency().getId(),
-            exchangeRate.getTargetCurrency().getId()
-    );
-    String sqlQuery = findByIds.isPresent()
-            ? "update exchange_rates set rate = (?) where base_currency_id = (?) and target_currency_id = (?);"
-            : "insert into exchange_rates (rate, base_currency_id, target_currency_id) values (?, ?, ?);";
-    int baseCurrencyId = exchangeRate.getBaseCurrency().getId();
-    int targetCurrencyId = exchangeRate.getTargetCurrency().getId();
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-      preparedStatement.setBigDecimal(1, exchangeRate.getRate());
-      preparedStatement.setInt(2, baseCurrencyId);
-      preparedStatement.setInt(3, targetCurrencyId);
-      preparedStatement.executeUpdate();
-      connection.commit();
-
-      return findByCurrencyIds(baseCurrencyId, targetCurrencyId)
-              .orElseThrow(() ->
-                      new EntityAlreadyExistsException("Данная валютная пара уже существует в базе данных"));
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public void delete(ExchangeRate exchangeRate) {
-    String deleteSqlQuery = "DELETE FROM exchange_rates WHERE id = (?);";
-    try {
-      PreparedStatement preparedStatement = connection.prepareStatement(deleteSqlQuery);
-      preparedStatement.setInt(1, exchangeRate.getId());
-      preparedStatement.executeUpdate();
-      connection.commit();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public Optional<ExchangeRate> findById(Integer integer) {
-    throw new UnsupportedOperationException("Not supported yet");
-  }
-
 }
